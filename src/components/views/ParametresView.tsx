@@ -13,6 +13,7 @@ import {
   ChevronRight,
   LogOut,
   RotateCcw,
+  Check,
 } from "lucide-react";
 
 interface ParametresViewProps {
@@ -270,9 +271,16 @@ export const ParametresView: React.FC<ParametresViewProps> = ({
               variant="outline"
               size="sm"
               onClick={handleReset}
-              className="h-9 text-xs"
+              className="h-9 text-xs gap-1.5"
             >
-              {resetDone ? "Réinitialisé ✓" : "Réinitialiser"}
+              {resetDone ? (
+                <>
+                  <Check className="h-3.5 w-3.5 text-[var(--finance)]" />
+                  Réinitialisé
+                </>
+              ) : (
+                "Réinitialiser"
+              )}
             </Button>
           </div>
         </Card>
