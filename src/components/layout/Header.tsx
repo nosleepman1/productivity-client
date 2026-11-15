@@ -1,5 +1,6 @@
 import React from "react";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useActiveEspace } from "@/features/espaces/hooks/useEspaces";
 import {
   Sun,
   Moon,
@@ -26,16 +27,30 @@ const TAB_META: Record<
 
 export const Header: React.FC<HeaderProps> = ({ activeTab }) => {
   const { theme, toggleTheme, resolvedTheme } = useTheme();
+  const { activeEspace } = useActiveEspace();
   const { title, Icon } = TAB_META[activeTab];
 
   return (
     <header className="apple-glass-bar sticky top-0 z-30 w-full border-b transition-colors duration-200">
       <div className="mx-auto flex h-12 max-w-4xl items-center justify-between px-4 sm:px-6">
-        <div className="flex items-center gap-2">
-          <Icon className="h-4 w-4 text-primary" />
-          <h1 className="text-[15px] font-semibold tracking-tight text-foreground">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <Icon className="h-4 w-4 shrink-0 text-primary" />
+          <h1 className="text-[15px] font-semibold tracking-tight text-foreground truncate">
             {title}
           </h1>
+          {activeEspace && (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-muted/60 px-2 py-0.5 text-[11px] font-medium text-muted-foreground max-w-[120px] truncate">
+              <span
+                className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary"
+                style={
+                  activeEspace.couleur
+                    ? { backgroundColor: activeEspace.couleur }
+                    : undefined
+                }
+              />
+              <span className="truncate">{activeEspace.nom}</span>
+            </span>
+          )}
         </div>
 
         <div className="flex items-center gap-1">
