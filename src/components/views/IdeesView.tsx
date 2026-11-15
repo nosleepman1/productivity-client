@@ -1,202 +1,166 @@
-import React, { useState } from "react";
+import { useMemo, useState } from "react";
+import { Plus, Sparkles } from "lucide-react";
+import { MotionConfig } from "motion/react";
+import { useActiveEspace } from "@/features/espaces/hooks/useEspaces";
+import { DeleteConfirmDialog } from "@/features/finances/components/DeleteConfirmDialog";
+import { NoteFormModal } from "@/features/productivity/components/NoteFormModal";
+import { NoteList } from "@/features/productivity/components/NoteList";
+import { NoteReaderModal } from "@/features/productivity/components/NoteReaderModal";
+import { ProductivityFiltersBar } from "@/features/productivity/components/ProductivityFiltersBar";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Lightbulb,
-  Sparkles,
-  Star,
-  Plus,
-  ArrowUp,
-  Layers,
-  Zap,
-  TrendingUp,
-  Target,
-} from "lucide-react";
+  useCreateNoteMutation,
+  useDeleteNoteMutation,
+  useNotes,
+  useUpdateNoteMutation,
+} from "@/features/productivity/hooks/useNotes";
+import type { CreateNoteDto, Note } from "@/types/productivity";
 
-export interface IdeaItem {
-  id: string;
-  title: string;
-  category: string;
-  description: string;
-  starred: boolean;
-  votes: number;
-  date: string;
-  status: "En réflexion" | "À tester" | "Validée";
-}
+/**
+ * Vue Notes & Idées connectée à l'API NestJS (`/espaces/:espaceId/notes`),
+ * avec lecture plein écran, édition Zod, recherche et pagination.
+ */
+export function IdeesView() {
+  const { activeEspace, activeEspaceId } = useActiveEspace();
 
-interface IdeesViewProps {
-  ideas: IdeaItem[];
-  onToggleStar: (id: string) => void;
-  onUpvote: (id: string) => void;
-  onQuickAddIdea: (title: string) => void;
-  onOpenQuickAdd: () => void;
-}
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [tri, setTri] = useState<"updatedAt" | "createdAt" | "titre">(
+    "updatedAt",
+  );
+  const [ordre, setOrdre] = useState<"asc" | "desc">("desc");
 
-export const IdeesView: React.FC<IdeesViewProps> = ({
-  ideas,
-  onToggleStar,
-  onUpvote,
-  onQuickAddIdea,
-  onOpenQuickAdd,
-}) => {
-  const [quickInput, setQuickInput] = useState("");
-  const [selectedTag, setSelectedTag] = useState<string>("Toutes");
+  const [formModal, setFormModal] = useState<{
+    open: boolean;
+    item: Note | null;
+  }>({ open: false, item: null });
+  const [readerNote, setReaderNote] = useState<Note | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Note | null>(null);
 
-  const tags: Array<{
-    label: string;
-    Icon: React.ComponentType<{ className?: string }>;
-  }> = [
-    { label: "Toutes", Icon: Layers },
-    { label: "Produit", Icon: Lightbulb },
-    { label: "Quick Win", Icon: Zap },
-    { label: "Growth", Icon: TrendingUp },
-    { label: "Stratégie", Icon: Target },
-  ];
-
-  const handleQuickSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!quickInput.trim()) return;
-    onQuickAddIdea(quickInput.trim());
-    setQuickInput("");
-  };
-
-  const filteredIdeas = ideas.filter((idea) => {
-    if (selectedTag === "Toutes") return true;
-    return idea.category.toLowerCase().includes(selectedTag.toLowerCase());
+  const notesQuery = useNotes(activeEspaceId, {
+    page,
+    limit: 30,
+    tri,
+    ordre,
   });
 
+  const createNote = useCreateNoteMutation(activeEspaceId);
+  const updateNote = useUpdateNoteMutation(activeEspaceId);
+  const deleteNote = useDeleteNoteMutation(activeEspaceId);
+
+  const filteredNotes = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const list = notesQuery.data?.data ?? [];
+    if (!q) return list;
+    return list.filter(
+      (n) =>
+        n.titre.toLowerCase().includes(q) ||
+        n.contenu.toLowerCase().includes(q),
+    );
+  }, [notesQuery.data?.data, search]);
+
+  const handleSubmit = async (dto: CreateNoteDto) => {
+    if (formModal.item) {
+      await updateNote.mutateAsync({ id: formModal.item.id, dto });
+    } else {
+      await createNote.mutateAsync(dto);
+    }
+    setFormModal({ open: false, item: null });
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    await deleteNote.mutateAsync(deleteTarget.id);
+    setDeleteTarget(null);
+  };
+
+  const meta = notesQuery.data?.meta;
+
   return (
-    <div className="space-y-6 pb-24 animate-in fade-in-50 duration-300">
-      {/* 1. Quick Capture Bar */}
-      <form
-        onSubmit={handleQuickSubmit}
-        className="relative flex items-center gap-2 rounded-2xl border border-border/80 bg-card p-2 shadow-sm transition-all focus-within:border-amber-500/60 focus-within:ring-3 focus-within:ring-amber-500/20"
-      >
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500">
-          <Lightbulb className="h-5 w-5" />
+    <MotionConfig reducedMotion="user">
+      <div className="space-y-6 pb-24">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-[var(--accent)]/10 px-2.5 py-0.5 text-xs font-semibold text-[var(--accent)]">
+              <Sparkles className="h-3 w-3" />
+              {activeEspace?.nom ?? "Espace actif"}
+            </div>
+            <h1 className="mt-1.5 text-2xl font-bold tracking-tight text-[var(--text-primary)]">
+              Notes & Idées
+            </h1>
+          </div>
+
+          <button
+            type="button"
+            disabled={!activeEspaceId}
+            onClick={() => setFormModal({ open: true, item: null })}
+            className="apple-press inline-flex min-h-[44px] items-center justify-center gap-2 rounded-2xl bg-[var(--accent)] px-4 text-sm font-semibold text-white shadow-sm disabled:opacity-50"
+          >
+            <Plus className="h-4 w-4" />
+            Nouvelle note
+          </button>
         </div>
-        <Input
-          value={quickInput}
-          onChange={(e) => setQuickInput(e.target.value)}
-          placeholder="Capturer une idée spontanée en un clic..."
-          className="border-0 bg-transparent text-xs placeholder:text-muted-foreground focus-visible:ring-0 shadow-none px-1"
+
+        <ProductivityFiltersBar
+          search={search}
+          onSearchChange={setSearch}
+          tri={tri}
+          sortOptions={[
+            { value: "updatedAt", label: "Dernière modification" },
+            { value: "createdAt", label: "Date de création" },
+            { value: "titre", label: "Titre" },
+          ]}
+          onTriChange={(val) => {
+            setTri(val as "updatedAt" | "createdAt" | "titre");
+            setPage(1);
+          }}
+          ordre={ordre}
+          onToggleOrdre={() =>
+            setOrdre((prev) => (prev === "desc" ? "asc" : "desc"))
+          }
+          page={meta?.page ?? page}
+          totalPages={
+            meta ? Math.max(1, Math.ceil(meta.total / meta.limit)) : 1
+          }
+          totalItems={meta?.total ?? 0}
+          onPageChange={setPage}
         />
-        <Button
-          type="submit"
-          size="sm"
-          disabled={!quickInput.trim()}
-          className="bg-amber-500 text-amber-950 hover:bg-amber-400 font-semibold text-xs gap-1 shrink-0"
-        >
-          <Plus className="h-3.5 w-3.5" />
-          Ajouter
-        </Button>
-      </form>
 
-      {/* 2. Category Chips & Advanced Add */}
-      <div className="flex items-center justify-between gap-2 overflow-x-auto pb-1 scrollbar-none">
-        <div className="flex items-center gap-1.5">
-          {tags.map(({ label, Icon }) => (
-            <button
-              key={label}
-              onClick={() => setSelectedTag(label)}
-              className={`apple-press inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-medium ${
-                selectedTag === label
-                  ? "bg-amber-500 text-amber-950 font-semibold shadow-xs"
-                  : "border border-border/70 bg-card/60 text-muted-foreground hover:bg-muted hover:text-foreground"
-              }`}
-            >
-              <Icon className="h-3.5 w-3.5" />
-              {label}
-            </button>
-          ))}
-        </div>
+        <NoteList
+          items={filteredNotes}
+          isLoading={notesQuery.isLoading}
+          onCreate={() => setFormModal({ open: true, item: null })}
+          onRead={(note) => setReaderNote(note)}
+          onEdit={(item) => setFormModal({ open: true, item })}
+          onDelete={(item) => setDeleteTarget(item)}
+        />
 
-        <Button
-          onClick={onOpenQuickAdd}
-          variant="outline"
-          size="xs"
-          className="shrink-0 gap-1 text-xs"
-        >
-          <Sparkles className="h-3 w-3 text-amber-500" />
-          Avancé
-        </Button>
+        <NoteFormModal
+          open={formModal.open}
+          initialData={formModal.item}
+          isPending={createNote.isPending || updateNote.isPending}
+          onClose={() => setFormModal({ open: false, item: null })}
+          onSubmit={(dto) => void handleSubmit(dto)}
+        />
+
+        <NoteReaderModal
+          note={readerNote}
+          onClose={() => setReaderNote(null)}
+          onEdit={(note) => setFormModal({ open: true, item: note })}
+        />
+
+        <DeleteConfirmDialog
+          open={Boolean(deleteTarget)}
+          title="Supprimer cette note ?"
+          description={
+            deleteTarget
+              ? `« ${deleteTarget.titre} » sera définitivement supprimée.`
+              : ""
+          }
+          isPending={deleteNote.isPending}
+          onCancel={() => setDeleteTarget(null)}
+          onConfirm={() => void handleConfirmDelete()}
+        />
       </div>
-
-      {/* 3. Ideas Grid */}
-      <div className="grid gap-3 sm:grid-cols-2">
-        {filteredIdeas.map((idea) => {
-          const statusBadges = {
-            "En réflexion": "bg-muted text-muted-foreground",
-            "À tester": "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30",
-            "Validée": "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30",
-          };
-
-          return (
-            <Card
-              key={idea.id}
-              className="group relative flex flex-col justify-between overflow-hidden border-border/80 bg-card shadow-xs transition-all hover:border-amber-500/40 hover:shadow-md"
-            >
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                    <Sparkles className="h-3 w-3" />
-                    {idea.category}
-                  </span>
-                  <div className="flex items-center gap-1">
-                    <span
-                      className={`rounded border px-1.5 py-0.5 text-[10px] font-medium ${
-                        statusBadges[idea.status]
-                      }`}
-                    >
-                      {idea.status}
-                    </span>
-                    <button
-                      onClick={() => onToggleStar(idea.id)}
-                      aria-label="Mettre en favori"
-                      className="p-1 text-muted-foreground hover:text-amber-500 transition-colors"
-                    >
-                      <Star
-                        className={`h-4 w-4 ${
-                          idea.starred
-                            ? "fill-amber-400 text-amber-400"
-                            : "text-muted-foreground/60"
-                        }`}
-                      />
-                    </button>
-                  </div>
-                </div>
-
-                <CardTitle className="text-sm font-bold text-foreground mt-1">
-                  {idea.title}
-                </CardTitle>
-                <CardDescription className="text-xs text-muted-foreground line-clamp-3 leading-relaxed">
-                  {idea.description}
-                </CardDescription>
-              </CardHeader>
-
-              <CardContent className="pt-2 border-t border-border/50 flex items-center justify-between text-xs text-muted-foreground">
-                <span className="text-[11px]">{idea.date}</span>
-
-                <button
-                  onClick={() => onUpvote(idea.id)}
-                  aria-label="Voter pour cette idée"
-                  className="flex items-center gap-1 rounded-md border border-border/70 bg-background/60 px-2 py-0.5 text-xs font-semibold text-foreground transition-all hover:border-amber-500/40 hover:bg-amber-500/10 active:scale-95"
-                >
-                  <ArrowUp className="h-3.5 w-3.5 text-amber-500" />
-                  <span>{idea.votes}</span>
-                </button>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-    </div>
+    </MotionConfig>
   );
-};
+}
