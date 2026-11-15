@@ -32,7 +32,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
       {/* Mobile & Tablet Bar Container */}
       <nav
         aria-label="Navigation principale"
-        className="pointer-events-auto w-full max-w-lg md:mb-4 md:rounded-2xl border-t md:border border-border/80 bg-background/85 dark:bg-card/85 backdrop-blur-2xl shadow-[0_-10px_25px_-5px_rgba(0,0,0,0.05)] dark:shadow-[0_-10px_35px_-5px_rgba(0,0,0,0.6)] px-3 py-2 transition-all duration-300"
+        className="apple-glass-bar apple-surface pointer-events-auto w-full max-w-lg md:mb-4 md:rounded-2xl border-t md:border px-3 py-2"
       >
         <div className="relative flex items-center justify-between">
           {/* 1. GAUCHE: FINANCE */}
@@ -109,13 +109,13 @@ export const BottomNav: React.FC<BottomNavProps> = ({
             )}
           </button>
 
-          {/* 3. MILIEU: BOUTON CENTRAL "+" (WhatsApp / Instagram Elevated Floating FAB) */}
+          {/* 3. MILIEU: BOUTON CENTRAL "+" */}
           <div className="relative flex flex-1 items-center justify-center">
             <button
               type="button"
               onClick={onPlusClick}
               aria-label="Créer rapidement"
-              className="group relative -top-5 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-tr from-primary via-indigo-600 to-violet-500 text-white shadow-xl shadow-primary/35 ring-4 ring-background dark:ring-card transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-primary/45 active:scale-90"
+              className="apple-press group relative -top-5 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg ring-4 ring-background hover:brightness-105"
             >
               <div className="absolute inset-0 rounded-full bg-white/20 opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
               <Plus

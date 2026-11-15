@@ -129,7 +129,7 @@ const INITIAL_IDEAS: IdeaItem[] = [
   {
     id: "idea-1",
     title: "Assistant IA pour prédire la trésorerie du mois",
-    category: "💡 Produit",
+    category: "Produit",
     description:
       "Analyser automatiquement les flux récurrents (abonnements, contrats clients) et générer une alerte en cas de creux de cash prévisible.",
     starred: true,
@@ -140,7 +140,7 @@ const INITIAL_IDEAS: IdeaItem[] = [
   {
     id: "idea-2",
     title: "Widget iOS / Android pour saisie instantanée d'une dépense",
-    category: "⚡ Quick Win",
+    category: "Quick Win",
     description:
       "Un bouton rapide sur l'écran d'accueil du smartphone qui ouvre directement la caméra pour scanner un reçu ou saisir un montant en 3 secondes.",
     starred: true,
@@ -151,7 +151,7 @@ const INITIAL_IDEAS: IdeaItem[] = [
   {
     id: "idea-3",
     title: "Mode Focus Pomodoro synchronisé avec les projets",
-    category: "🎯 Stratégie",
+    category: "Stratégie",
     description:
       "Associer chaque session de 25 minutes à une tâche spécifique du tableau de bord pour mesurer le temps réel passé.",
     starred: false,
@@ -162,7 +162,7 @@ const INITIAL_IDEAS: IdeaItem[] = [
   {
     id: "idea-4",
     title: "Système de parrainage et partage de templates de productivité",
-    category: "🚀 Growth",
+    category: "Growth",
     description:
       "Permettre aux utilisateurs de dupliquer des structures de projets prêtes à l'emploi et d'inviter des collaborateurs.",
     starred: false,
@@ -292,7 +292,7 @@ function ProductivityApp() {
             onToggleStar={handleToggleStar}
             onUpvote={handleUpvote}
             onQuickAddIdea={(title) =>
-              handleAddIdea({ title, category: "💡 Produit", description: "" })
+              handleAddIdea({ title, category: "Produit", description: "" })
             }
             onOpenQuickAdd={() => setIsQuickAddOpen(true)}
           />

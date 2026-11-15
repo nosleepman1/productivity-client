@@ -14,6 +14,10 @@ import {
   Star,
   Plus,
   ArrowUp,
+  Layers,
+  Zap,
+  TrendingUp,
+  Target,
 } from "lucide-react";
 
 export interface IdeaItem {
@@ -45,7 +49,16 @@ export const IdeesView: React.FC<IdeesViewProps> = ({
   const [quickInput, setQuickInput] = useState("");
   const [selectedTag, setSelectedTag] = useState<string>("Toutes");
 
-  const tags = ["Toutes", "💡 Produit", "⚡ Quick Win", "🚀 Growth", "🎯 Stratégie"];
+  const tags: Array<{
+    label: string;
+    Icon: React.ComponentType<{ className?: string }>;
+  }> = [
+    { label: "Toutes", Icon: Layers },
+    { label: "Produit", Icon: Lightbulb },
+    { label: "Quick Win", Icon: Zap },
+    { label: "Growth", Icon: TrendingUp },
+    { label: "Stratégie", Icon: Target },
+  ];
 
   const handleQuickSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,7 +69,7 @@ export const IdeesView: React.FC<IdeesViewProps> = ({
 
   const filteredIdeas = ideas.filter((idea) => {
     if (selectedTag === "Toutes") return true;
-    return idea.category.toLowerCase().includes(selectedTag.replace(/[^a-zA-Z]/g, "").toLowerCase());
+    return idea.category.toLowerCase().includes(selectedTag.toLowerCase());
   });
 
   return (
@@ -89,17 +102,18 @@ export const IdeesView: React.FC<IdeesViewProps> = ({
       {/* 2. Category Chips & Advanced Add */}
       <div className="flex items-center justify-between gap-2 overflow-x-auto pb-1 scrollbar-none">
         <div className="flex items-center gap-1.5">
-          {tags.map((tag) => (
+          {tags.map(({ label, Icon }) => (
             <button
-              key={tag}
-              onClick={() => setSelectedTag(tag)}
-              className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
-                selectedTag === tag
-                  ? "bg-amber-500 text-amber-950 font-bold shadow-xs"
+              key={label}
+              onClick={() => setSelectedTag(label)}
+              className={`apple-press inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-medium ${
+                selectedTag === label
+                  ? "bg-amber-500 text-amber-950 font-semibold shadow-xs"
                   : "border border-border/70 bg-card/60 text-muted-foreground hover:bg-muted hover:text-foreground"
               }`}
             >
-              {tag}
+              <Icon className="h-3.5 w-3.5" />
+              {label}
             </button>
           ))}
         </div>

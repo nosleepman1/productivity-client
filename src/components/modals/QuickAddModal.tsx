@@ -49,7 +49,7 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
 
   // Idea form
   const [ideaTitle, setIdeaTitle] = useState("");
-  const [ideaCat, setIdeaCat] = useState("💡 Produit");
+  const [ideaCat, setIdeaCat] = useState("Produit");
   const [ideaDesc, setIdeaDesc] = useState("");
 
   const [savedSuccess, setSavedSuccess] = useState(false);
@@ -247,9 +247,9 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
                     onChange={(e) => setProjTag(e.target.value)}
                     className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-xs text-foreground outline-none focus:border-ring"
                   >
-                    <option value="Urgente">🔥 Urgente</option>
-                    <option value="Prioritaire">⚡ Prioritaire</option>
-                    <option value="Normale">🌱 Normale</option>
+                    <option value="Urgente">Urgente</option>
+                    <option value="Prioritaire">Prioritaire</option>
+                    <option value="Normale">Normale</option>
                   </select>
                 </div>
 
@@ -292,10 +292,10 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
                   onChange={(e) => setIdeaCat(e.target.value)}
                   className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-xs text-foreground outline-none focus:border-ring"
                 >
-                  <option value="💡 Produit">💡 Produit</option>
-                  <option value="🚀 Growth & Marketing">🚀 Growth & Marketing</option>
-                  <option value="⚡ Quick Win">⚡ Quick Win</option>
-                  <option value="🎯 Stratégie">🎯 Stratégie</option>
+                  <option value="Produit">Produit</option>
+                  <option value="Growth & Marketing">Growth &amp; Marketing</option>
+                  <option value="Quick Win">Quick Win</option>
+                  <option value="Stratégie">Stratégie</option>
                 </select>
               </div>
 
