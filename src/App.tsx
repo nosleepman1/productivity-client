@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { AppRoutes } from "./routes/AppRoutes";
+import { ToastContainer } from "./components/ui/ToastContainer";
 import { useLogoutMutation } from "./features/auth/hooks/useAuth";
 import { Header } from "./components/layout/Header";
 import { BottomNav, type NavTab } from "./components/layout/BottomNav";
@@ -335,6 +336,7 @@ function ProductivityApp() {
 export default function App() {
   return (
     <ThemeProvider>
+      <ToastContainer />
       <AppRoutes dashboard={<ProductivityApp />} />
     </ThemeProvider>
   );
