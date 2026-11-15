@@ -6,7 +6,11 @@ import { Input } from "@/components/ui/input";
 import { authService } from "@/services";
 import { extractApiError } from "@/api/api";
 import { PasswordStrength } from "./PasswordStrength";
-import { isStrongPassword } from "../utils/password";
+import {
+  extractFieldErrors,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+} from "../schemas/auth.schema";
 
 interface ForgotPasswordStepProps {
   initialEmail?: string;
@@ -28,10 +32,16 @@ export const ForgotPasswordStep: React.FC<ForgotPasswordStepProps> = ({
 
   const handleRequest = async (e: React.FormEvent) => {
     e.preventDefault();
+    const parsed = forgotPasswordSchema.safeParse({ email });
+    if (!parsed.success) {
+      const fields = extractFieldErrors<"email">(parsed.error);
+      setError(fields.email ?? "Adresse email invalide.");
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
-      await authService.forgotPassword({ email: email.trim() });
+      await authService.forgotPassword(parsed.data);
       setStep("confirm");
     } catch (err) {
       const apiErr = extractApiError(err);
@@ -45,18 +55,27 @@ export const ForgotPasswordStep: React.FC<ForgotPasswordStepProps> = ({
 
   const handleConfirm = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isStrongPassword(newPassword)) {
-      setError("Veuillez respecter tous les critères du mot de passe.");
+    const parsed = resetPasswordSchema.safeParse({
+      email,
+      code,
+      nouveauMotDePasse: newPassword,
+    });
+    if (!parsed.success) {
+      const fields = extractFieldErrors<"email" | "code" | "nouveauMotDePasse">(
+        parsed.error,
+      );
+      setError(
+        fields.code ??
+          fields.nouveauMotDePasse ??
+          fields.email ??
+          "Veuillez vérifier les champs.",
+      );
       return;
     }
     setLoading(true);
     setError(null);
     try {
-      await authService.resetPassword({
-        email: email.trim(),
-        code: code.trim(),
-        newPassword,
-      });
+      await authService.resetPassword(parsed.data);
       onResetSuccess();
     } catch (err) {
       const apiErr = extractApiError(err);
@@ -147,9 +166,10 @@ export const ForgotPasswordStep: React.FC<ForgotPasswordStepProps> = ({
             <Input
               required
               inputMode="numeric"
+              maxLength={6}
               placeholder="123456"
               value={code}
-              onChange={(e) => setCode(e.target.value)}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
               className="h-11 text-center text-base font-semibold tracking-[0.25em] tabular-nums"
             />
           </div>

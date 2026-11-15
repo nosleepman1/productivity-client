@@ -20,9 +20,15 @@ import { extractApiError } from "@/api/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordStrength } from "./PasswordStrength";
-import { isStrongPassword } from "../utils/password";
+import {
+  extractFieldErrors,
+  loginSchema,
+  registerSchema,
+  type FieldErrors,
+} from "../schemas/auth.schema";
 import { VerifyEmailStep } from "./VerifyEmailStep";
 import { ForgotPasswordStep } from "./ForgotPasswordStep";
+import { GoogleSignInButton } from "./GoogleSignInButton";
 
 type AuthView = "login" | "register" | "verify" | "forgot";
 
@@ -37,6 +43,9 @@ export const AuthScreen: React.FC = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<
+    FieldErrors<"name" | "email" | "password">
+  >({});
   const [banner, setBanner] = useState<string | null>(null);
   const [shakeKey, setShakeKey] = useState(0);
 
@@ -50,18 +59,25 @@ export const AuthScreen: React.FC = () => {
   const switchMode = (next: "login" | "register") => {
     setView(next);
     setError(null);
+    setFieldErrors({});
     setBanner(null);
   };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setFieldErrors({});
     setBanner(null);
+
+    const parsed = loginSchema.safeParse({ email, password });
+    if (!parsed.success) {
+      setFieldErrors(extractFieldErrors<"email" | "password">(parsed.error));
+      setShakeKey((k) => k + 1);
+      return;
+    }
+
     try {
-      await loginMutation.mutateAsync({
-        email: email.trim(),
-        password,
-      });
+      await loginMutation.mutateAsync(parsed.data);
     } catch (err) {
       const apiErr = extractApiError(err);
       const msg = Array.isArray(apiErr.message)
@@ -82,19 +98,20 @@ export const AuthScreen: React.FC = () => {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setFieldErrors({});
     setBanner(null);
 
-    if (!isStrongPassword(password)) {
-      triggerError("Veuillez respecter tous les critères de sécurité du mot de passe.");
+    const parsed = registerSchema.safeParse({ name, email, password });
+    if (!parsed.success) {
+      setFieldErrors(
+        extractFieldErrors<"name" | "email" | "password">(parsed.error),
+      );
+      setShakeKey((k) => k + 1);
       return;
     }
 
     try {
-      await registerMutation.mutateAsync({
-        name: name.trim(),
-        email: email.trim(),
-        password,
-      });
+      await registerMutation.mutateAsync(parsed.data);
       setView("verify");
     } catch (err) {
       const apiErr = extractApiError(err);
@@ -214,6 +231,7 @@ export const AuthScreen: React.FC = () => {
               {view === "login" && (
                 <motion.form
                   key="login"
+                  noValidate
                   onSubmit={handleLogin}
                   initial={{ opacity: 0, x: -14 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -237,6 +255,11 @@ export const AuthScreen: React.FC = () => {
                         className="h-11 pl-10 rounded-xl"
                       />
                     </div>
+                    {fieldErrors.email && (
+                      <p className="text-[11px] font-medium text-destructive">
+                        {fieldErrors.email}
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-1.5">
@@ -283,6 +306,11 @@ export const AuthScreen: React.FC = () => {
                         )}
                       </button>
                     </div>
+                    {fieldErrors.password && (
+                      <p className="text-[11px] font-medium text-destructive">
+                        {fieldErrors.password}
+                      </p>
+                    )}
                   </div>
 
                   {error && (
@@ -311,6 +339,7 @@ export const AuthScreen: React.FC = () => {
               {view === "register" && (
                 <motion.form
                   key="register"
+                  noValidate
                   onSubmit={handleRegister}
                   initial={{ opacity: 0, x: 14 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -334,6 +363,11 @@ export const AuthScreen: React.FC = () => {
                         className="h-11 pl-10 rounded-xl"
                       />
                     </div>
+                    {fieldErrors.name && (
+                      <p className="text-[11px] font-medium text-destructive">
+                        {fieldErrors.name}
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-1.5">
@@ -352,6 +386,11 @@ export const AuthScreen: React.FC = () => {
                         className="h-11 pl-10 rounded-xl"
                       />
                     </div>
+                    {fieldErrors.email && (
+                      <p className="text-[11px] font-medium text-destructive">
+                        {fieldErrors.email}
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-1.5">
@@ -388,6 +427,11 @@ export const AuthScreen: React.FC = () => {
                     </div>
                     {password.length > 0 && (
                       <PasswordStrength password={password} />
+                    )}
+                    {fieldErrors.password && (
+                      <p className="text-[11px] font-medium text-destructive">
+                        {fieldErrors.password}
+                      </p>
                     )}
                   </div>
 
@@ -438,6 +482,19 @@ export const AuthScreen: React.FC = () => {
                 />
               )}
             </AnimatePresence>
+
+            {(view === "login" || view === "register") && (
+              <div className="mt-5 space-y-4">
+                <div className="relative flex items-center">
+                  <div className="flex-grow border-t border-border/80" />
+                  <span className="mx-3 shrink-0 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                    ou
+                  </span>
+                  <div className="flex-grow border-t border-border/80" />
+                </div>
+                <GoogleSignInButton onError={triggerError} />
+              </div>
+            )}
           </motion.div>
         </div>
       </div>
