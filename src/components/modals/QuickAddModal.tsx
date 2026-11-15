@@ -18,11 +18,17 @@ import {
   TrendingDown,
   TrendingUp,
 } from "lucide-react";
+import { useActiveEspace } from "@/features/espaces/hooks/useEspaces";
+import { useCreateDepenseMutation } from "@/features/finances/hooks/useDepenses";
+import { useCreateRevenuMutation } from "@/features/finances/hooks/useRevenus";
+import {
+  toTransactionDto,
+  transactionFormSchema,
+} from "@/features/finances/schemas/transaction.schema";
 
 interface QuickAddModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddTransaction?: (tx: { title: string; amount: number; type: "income" | "expense"; category: string }) => void;
   onAddProject?: (proj: { title: string; tag: string; deadline: string }) => void;
   onAddIdea?: (idea: { title: string; category: string; description: string }) => void;
 }
@@ -30,17 +36,20 @@ interface QuickAddModalProps {
 export const QuickAddModal: React.FC<QuickAddModalProps> = ({
   open,
   onOpenChange,
-  onAddTransaction,
   onAddProject,
   onAddIdea,
 }) => {
+  const { activeEspaceId } = useActiveEspace();
+  const createRevenu = useCreateRevenuMutation(activeEspaceId);
+  const createDepense = useCreateDepenseMutation(activeEspaceId);
+
   const [activeType, setActiveType] = useState<"finance" | "projet" | "idee">("finance");
 
   // Finance form
   const [txTitle, setTxTitle] = useState("");
   const [txAmount, setTxAmount] = useState("");
   const [txType, setTxType] = useState<"expense" | "income">("expense");
-  const [txCategory, setTxCategory] = useState("Outils & SaaS");
+  const [txError, setTxError] = useState<string | null>(null);
 
   // Project form
   const [projTitle, setProjTitle] = useState("");
@@ -54,16 +63,27 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
 
   const [savedSuccess, setSavedSuccess] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (activeType === "finance" && txTitle && txAmount) {
-      onAddTransaction?.({
-        title: txTitle,
-        amount: parseFloat(txAmount) || 0,
-        type: txType,
-        category: txCategory,
+    if (activeType === "finance") {
+      const parsed = transactionFormSchema.safeParse({
+        montant: txAmount.trim() === "" ? NaN : Number(txAmount),
+        description: txTitle,
       });
+
+      if (!parsed.success) {
+        setTxError(parsed.error.issues[0]?.message ?? "Données invalides");
+        return;
+      }
+
+      setTxError(null);
+      const dto = toTransactionDto(parsed.data);
+      if (txType === "income") {
+        await createRevenu.mutateAsync(dto);
+      } else {
+        await createDepense.mutateAsync(dto);
+      }
       setTxTitle("");
       setTxAmount("");
     } else if (activeType === "projet" && projTitle) {
@@ -148,7 +168,7 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
         </div>
 
         {/* Dynamic Form Content */}
-        <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-3.5">
+        <form onSubmit={(e) => void handleSubmit(e)} className="mt-4 flex flex-col gap-3.5">
           {activeType === "finance" && (
             <>
               <div className="flex gap-2">
@@ -191,34 +211,25 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="text-xs font-medium text-foreground mb-1 block">
-                    Montant (€)
-                  </label>
-                  <Input
-                    required
-                    type="number"
-                    step="0.01"
-                    placeholder="ex: 49.99"
-                    value={txAmount}
-                    onChange={(e) => setTxAmount(e.target.value)}
-                    className="bg-background text-sm"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-medium text-foreground mb-1 block">
-                    Catégorie
-                  </label>
-                  <Input
-                    placeholder="Outils, Salaires..."
-                    value={txCategory}
-                    onChange={(e) => setTxCategory(e.target.value)}
-                    className="bg-background text-sm"
-                  />
-                </div>
+              <div>
+                <label className="text-xs font-medium text-foreground mb-1 block">
+                  Montant (FCFA)
+                </label>
+                <Input
+                  required
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  step={1}
+                  placeholder="ex: 25000"
+                  value={txAmount}
+                  onChange={(e) => setTxAmount(e.target.value)}
+                  className="bg-background text-sm tabular-nums"
+                />
               </div>
+              {txError && (
+                <p className="text-xs text-rose-500">{txError}</p>
+              )}
             </>
           )}
 
