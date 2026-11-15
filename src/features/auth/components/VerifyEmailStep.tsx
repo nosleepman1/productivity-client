@@ -5,6 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { authService } from "@/services";
 import { extractApiError } from "@/api/api";
+import {
+  extractFieldErrors,
+  verifyEmailSchema,
+} from "../schemas/auth.schema";
 
 interface VerifyEmailStepProps {
   email: string;
@@ -32,11 +36,16 @@ export const VerifyEmailStep: React.FC<VerifyEmailStepProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (code.trim().length < 4) return;
+    const parsed = verifyEmailSchema.safeParse({ email, code });
+    if (!parsed.success) {
+      const fields = extractFieldErrors<"email" | "code">(parsed.error);
+      setError(fields.code ?? fields.email ?? "Code invalide.");
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
-      await authService.verifyEmail({ email, code: code.trim() });
+      await authService.verifyEmail(parsed.data);
       setDone(true);
       setTimeout(onVerified, 900);
     } catch (err) {
@@ -124,10 +133,11 @@ export const VerifyEmailStep: React.FC<VerifyEmailStepProps> = ({
         <Input
           required
           inputMode="numeric"
+          maxLength={6}
           autoComplete="one-time-code"
           placeholder="123456"
           value={code}
-          onChange={(e) => setCode(e.target.value)}
+          onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
           className="h-11 text-center text-base font-semibold tracking-[0.25em] tabular-nums"
         />
       </div>
@@ -140,7 +150,7 @@ export const VerifyEmailStep: React.FC<VerifyEmailStepProps> = ({
 
       <Button
         type="submit"
-        disabled={loading || code.trim().length < 4}
+        disabled={loading || code.trim().length !== 6}
         className="apple-press h-11 w-full rounded-xl text-sm font-semibold"
       >
         {loading ? (
