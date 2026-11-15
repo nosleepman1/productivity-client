@@ -1,33 +1,34 @@
 import React, { useState } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Sun,
   Moon,
   Laptop,
-  Check,
   Palette,
-  Shield,
   Bell,
   Coins,
+  Briefcase,
+  ChevronRight,
+  LogOut,
+  RotateCcw,
 } from "lucide-react";
 
 interface ParametresViewProps {
   onResetData?: () => void;
+  onLogout?: () => void;
 }
 
-export const ParametresView: React.FC<ParametresViewProps> = ({ onResetData }) => {
-  const { theme, setTheme, resolvedTheme, themePreset, setThemePreset } = useTheme();
+export const ParametresView: React.FC<ParametresViewProps> = ({
+  onResetData,
+  onLogout,
+}) => {
+  const { theme, setTheme, themePreset, setThemePreset } = useTheme();
 
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [currency, setCurrency] = useState("EUR (€)");
+  const [activeWorkspace, setActiveWorkspace] = useState("Personnel");
   const [resetDone, setResetDone] = useState(false);
 
   const handleReset = () => {
@@ -37,357 +38,256 @@ export const ParametresView: React.FC<ParametresViewProps> = ({ onResetData }) =
   };
 
   return (
-    <div className="space-y-6 pb-24 animate-in fade-in-50 duration-300">
-      {/* 1. Profile Banner */}
-      <Card className="border-border/80 bg-gradient-to-r from-card to-primary/5 shadow-xs">
-        <CardContent className="p-4 sm:p-5 flex items-center justify-between">
+    <div className="space-y-6 pb-24">
+      {/* 1. Compte / Profil (Apple Settings Header Row) */}
+      <Card className="apple-surface border-border/80 bg-card p-0 overflow-hidden">
+        <div className="flex items-center justify-between gap-3 p-4 min-h-[68px]">
           <div className="flex items-center gap-3.5">
-            <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-primary to-indigo-600 text-base font-bold text-white shadow-md shadow-primary/25">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
               AD
-              <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-emerald-500 ring-2 ring-card" />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-foreground sm:text-base">
+              <h2 className="text-sm font-semibold text-foreground sm:text-base">
                 Abdallah DIOUF
               </h2>
-              <p className="text-xs text-muted-foreground">Product Lead & Developer</p>
-              <div className="mt-1 flex items-center gap-1.5">
-                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
-                  Édition Pro
-                </span>
-                <span className="text-[10px] text-muted-foreground">• Espace Actif</span>
-              </div>
+              <p className="text-xs text-muted-foreground">
+                Compte Pro · Synchronisation prête
+              </p>
             </div>
           </div>
-        </CardContent>
+          <ChevronRight className="h-4 w-4 text-muted-foreground/70 shrink-0" />
+        </div>
       </Card>
 
-      {/* 2. THEME PRESET & MODE SELECTOR SECTION */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between gap-2">
-          <div>
-            <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-              <Palette className="h-4 w-4 text-primary" />
-              Thème Apple &amp; Apparence
-            </h3>
-            <p className="text-xs text-muted-foreground">
-              Deux systèmes visuels ergonomiques inspirés d&apos;Apple HIG.
-            </p>
+      {/* 2. Espace de travail (Multi-Espaces API) */}
+      <div className="space-y-1.5">
+        <h3 className="px-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Espace de travail
+        </h3>
+        <Card className="apple-surface border-border/80 bg-card divide-y divide-border/70 p-0 overflow-hidden">
+          <div className="flex items-center justify-between gap-3 px-4 py-3 min-h-[52px]">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/12 text-primary">
+                <Briefcase className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-foreground">Espace actif</p>
+                <p className="text-[11px] text-muted-foreground">
+                  Cloisonnement projets, tâches &amp; finances
+                </p>
+              </div>
+            </div>
+            <select
+              value={activeWorkspace}
+              onChange={(e) => setActiveWorkspace(e.target.value)}
+              aria-label="Sélectionner l'espace de travail"
+              className="h-9 rounded-lg border border-input bg-secondary/60 px-2.5 text-xs font-medium text-foreground outline-none focus:ring-2 focus:ring-ring"
+            >
+              <option value="Personnel">Personnel</option>
+              <option value="Entreprise">Entreprise</option>
+            </select>
           </div>
-          <span className="rounded-md border border-border bg-muted/50 px-2.5 py-1 text-[11px] font-medium text-foreground tabular-nums">
-            {themePreset === "cupertino" ? "Cupertino" : "Sonoma"} ·{" "}
-            {theme === "system" ? `Système (${resolvedTheme})` : theme === "light" ? "Clair" : "Sombre"}
-          </span>
-        </div>
-
-        {/* 2.1 Apple Theme Presets */}
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <button
-            type="button"
-            onClick={() => setThemePreset("cupertino")}
-            className={`apple-press group relative flex flex-col rounded-2xl border p-4 text-left ${
-              themePreset === "cupertino"
-                ? "border-primary bg-primary/5 ring-2 ring-primary/35 apple-surface"
-                : "border-border/80 bg-card hover:border-primary/40 hover:bg-muted/30"
-            }`}
-          >
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <span className="text-xs font-bold text-foreground block">
-                  Cupertino Paper &amp; Ink
-                </span>
-                <span className="text-[11px] text-muted-foreground">
-                  Style Apple Notes · Clarté &amp; contraste pur
-                </span>
-              </div>
-              {themePreset === "cupertino" && (
-                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                  <Check className="h-3.5 w-3.5 stroke-[3]" />
-                </div>
-              )}
-            </div>
-            <div className="flex items-center gap-2 rounded-xl border border-black/10 dark:border-white/10 bg-[#f5f5f7] dark:bg-[#1c1c1e] p-2.5">
-              <span className="h-5 w-5 rounded-full bg-[#007AFF] dark:bg-[#0A84FF] shadow-xs" />
-              <span className="h-5 w-5 rounded-full bg-[#34C759] dark:bg-[#30D158] shadow-xs" />
-              <span className="h-5 w-5 rounded-full bg-[#5856D6] dark:bg-[#5E5CE6] shadow-xs" />
-              <span className="h-5 w-5 rounded-full bg-[#FF9500] dark:bg-[#FF9F0A] shadow-xs" />
-              <span className="ml-auto text-[10px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">
-                SF Blue
-              </span>
-            </div>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setThemePreset("sonoma")}
-            className={`apple-press group relative flex flex-col rounded-2xl border p-4 text-left ${
-              themePreset === "sonoma"
-                ? "border-primary bg-primary/5 ring-2 ring-primary/35 apple-surface"
-                : "border-border/80 bg-card hover:border-primary/40 hover:bg-muted/30"
-            }`}
-          >
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <span className="text-xs font-bold text-foreground block">
-                  Sonoma Frosted Glass
-                </span>
-                <span className="text-[11px] text-muted-foreground">
-                  Style macOS Focus · Verre dépoli &amp; Teal
-                </span>
-              </div>
-              {themePreset === "sonoma" && (
-                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                  <Check className="h-3.5 w-3.5 stroke-[3]" />
-                </div>
-              )}
-            </div>
-            <div className="flex items-center gap-2 rounded-xl border border-slate-900/10 dark:border-white/10 bg-[#f2f4f8] dark:bg-[#161922] p-2.5">
-              <span className="h-5 w-5 rounded-full bg-[#0D9488] dark:bg-[#38BDF8] shadow-xs" />
-              <span className="h-5 w-5 rounded-full bg-[#10B981] dark:bg-[#34D399] shadow-xs" />
-              <span className="h-5 w-5 rounded-full bg-[#3B82F6] dark:bg-[#60A5FA] shadow-xs" />
-              <span className="h-5 w-5 rounded-full bg-[#F59E0B] dark:bg-[#FBBF24] shadow-xs" />
-              <span className="ml-auto text-[10px] font-semibold text-slate-800 dark:text-slate-100">
-                Focus Teal
-              </span>
-            </div>
-          </button>
-        </div>
-
-        {/* 3 Visual Cards for Mode Picking */}
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          {/* Light Theme Card */}
-          <button
-            type="button"
-            onClick={() => setTheme("light")}
-            className={`group relative flex flex-col rounded-xl border p-3.5 text-left transition-all ${
-              theme === "light"
-                ? "border-primary bg-primary/5 ring-2 ring-primary/40 shadow-sm"
-                : "border-border/80 bg-card hover:border-primary/40 hover:bg-muted/30"
-            }`}
-          >
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Sun className="h-4 w-4 text-amber-500" />
-                <span className="text-xs font-bold text-foreground">Clair</span>
-              </div>
-              {theme === "light" && (
-                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-white">
-                  <Check className="h-3 w-3 stroke-[3]" />
-                </div>
-              )}
-            </div>
-
-            {/* Miniature Preview Mockup */}
-            <div className="rounded-lg border border-slate-200 bg-slate-50 p-2 shadow-xs space-y-1.5">
-              <div className="flex justify-between items-center">
-                <div className="h-2 w-12 rounded bg-indigo-600" />
-                <div className="h-2 w-4 rounded bg-emerald-500" />
-              </div>
-              <div className="rounded bg-white p-1.5 border border-slate-200 space-y-1">
-                <div className="h-1.5 w-16 rounded bg-slate-800" />
-                <div className="h-1 w-10 rounded bg-slate-400" />
-              </div>
-            </div>
-            <p className="mt-2 text-[11px] text-muted-foreground">
-              Lisibilité maximale et tons doux pour le travail de jour.
-            </p>
-          </button>
-
-          {/* Dark Theme Card */}
-          <button
-            type="button"
-            onClick={() => setTheme("dark")}
-            className={`group relative flex flex-col rounded-xl border p-3.5 text-left transition-all ${
-              theme === "dark"
-                ? "border-primary bg-primary/5 ring-2 ring-primary/40 shadow-sm"
-                : "border-border/80 bg-card hover:border-primary/40 hover:bg-muted/30"
-            }`}
-          >
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Moon className="h-4 w-4 text-indigo-400" />
-                <span className="text-xs font-bold text-foreground">Sombre</span>
-              </div>
-              {theme === "dark" && (
-                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-white">
-                  <Check className="h-3 w-3 stroke-[3]" />
-                </div>
-              )}
-            </div>
-
-            {/* Miniature Preview Mockup */}
-            <div className="rounded-lg border border-slate-800 bg-[#0c0e17] p-2 shadow-xs space-y-1.5">
-              <div className="flex justify-between items-center">
-                <div className="h-2 w-12 rounded bg-indigo-500" />
-                <div className="h-2 w-4 rounded bg-emerald-400" />
-              </div>
-              <div className="rounded bg-[#151928] p-1.5 border border-slate-700/60 space-y-1">
-                <div className="h-1.5 w-16 rounded bg-slate-100" />
-                <div className="h-1 w-10 rounded bg-slate-500" />
-              </div>
-            </div>
-            <p className="mt-2 text-[11px] text-muted-foreground">
-              Obsidian profond, contraste optimal &amp; accents néons.
-            </p>
-          </button>
-
-          {/* System Theme Card */}
-          <button
-            type="button"
-            onClick={() => setTheme("system")}
-            className={`group relative flex flex-col rounded-xl border p-3.5 text-left transition-all ${
-              theme === "system"
-                ? "border-primary bg-primary/5 ring-2 ring-primary/40 shadow-sm"
-                : "border-border/80 bg-card hover:border-primary/40 hover:bg-muted/30"
-            }`}
-          >
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Laptop className="h-4 w-4 text-primary" />
-                <span className="text-xs font-bold text-foreground">Système</span>
-              </div>
-              {theme === "system" && (
-                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-white">
-                  <Check className="h-3 w-3 stroke-[3]" />
-                </div>
-              )}
-            </div>
-
-            {/* Miniature Preview Split Mockup */}
-            <div className="flex rounded-lg overflow-hidden border border-border shadow-xs h-[52px]">
-              <div className="w-1/2 bg-slate-100 p-1.5 flex flex-col justify-center gap-1">
-                <div className="h-2 w-8 rounded bg-indigo-600" />
-                <div className="h-1.5 w-6 rounded bg-slate-300" />
-              </div>
-              <div className="w-1/2 bg-[#0c0e17] p-1.5 flex flex-col justify-center gap-1">
-                <div className="h-2 w-8 rounded bg-indigo-400" />
-                <div className="h-1.5 w-6 rounded bg-slate-600" />
-              </div>
-            </div>
-            <p className="mt-2 text-[11px] text-muted-foreground">
-              Bascule automatique selon les préférences de votre appareil.
-            </p>
-          </button>
-        </div>
+        </Card>
       </div>
 
-      {/* 3. Productivity Color Tokens Showcase */}
-      <Card className="border-border/80 bg-card shadow-xs">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            Nuancier & Accents Métier
-          </CardTitle>
-          <CardDescription className="text-xs text-muted-foreground">
-            Chaque domaine dispose d&apos;une signature visuelle distincte.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            <div className="flex items-center gap-2.5 rounded-lg border border-border/70 p-2">
-              <span className="h-4 w-4 rounded-full bg-primary shadow-xs ring-2 ring-primary/20" />
-              <div className="text-[11px]">
-                <p className="font-semibold text-foreground">Primary</p>
-                <p className="text-muted-foreground">Indigo / Core</p>
+      {/* 3. Apparence & Thèmes Apple (Compact Grouped List) */}
+      <div className="space-y-1.5">
+        <h3 className="px-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Apparence
+        </h3>
+        <Card className="apple-surface border-border/80 bg-card divide-y divide-border/70 p-0 overflow-hidden">
+          {/* Style Apple : Cupertino vs Sonoma */}
+          <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 min-h-[52px]">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/12 text-primary">
+                <Palette className="h-4 w-4" />
               </div>
+              <span className="text-sm font-medium text-foreground">Style</span>
             </div>
 
-            <div className="flex items-center gap-2.5 rounded-lg border border-border/70 p-2">
-              <span className="h-4 w-4 rounded-full bg-emerald-500 shadow-xs ring-2 ring-emerald-500/20" />
-              <div className="text-[11px]">
-                <p className="font-semibold text-foreground">Finance</p>
-                <p className="text-muted-foreground">Émeraude / Cash</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2.5 rounded-lg border border-border/70 p-2">
-              <span className="h-4 w-4 rounded-full bg-indigo-500 shadow-xs ring-2 ring-indigo-500/20" />
-              <div className="text-[11px]">
-                <p className="font-semibold text-foreground">Projets</p>
-                <p className="text-muted-foreground">Violet / Sprints</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2.5 rounded-lg border border-border/70 p-2">
-              <span className="h-4 w-4 rounded-full bg-amber-500 shadow-xs ring-2 ring-amber-500/20" />
-              <div className="text-[11px]">
-                <p className="font-semibold text-foreground">Idées</p>
-                <p className="text-muted-foreground">Or / Brainstorm</p>
-              </div>
+            <div
+              role="radiogroup"
+              aria-label="Style visuel Apple"
+              className="inline-flex rounded-xl bg-muted p-1"
+            >
+              <button
+                type="button"
+                role="radio"
+                aria-checked={themePreset === "cupertino"}
+                onClick={() => setThemePreset("cupertino")}
+                className={`apple-press flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium min-h-[34px] ${
+                  themePreset === "cupertino"
+                    ? "bg-card text-foreground shadow-xs"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <span className="h-2.5 w-2.5 rounded-full bg-[#007AFF] dark:bg-[#0A84FF]" />
+                Cupertino
+              </button>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={themePreset === "sonoma"}
+                onClick={() => setThemePreset("sonoma")}
+                className={`apple-press flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium min-h-[34px] ${
+                  themePreset === "sonoma"
+                    ? "bg-card text-foreground shadow-xs"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <span className="h-2.5 w-2.5 rounded-full bg-[#0D9488] dark:bg-[#2DD4BF]" />
+                Sonoma
+              </button>
             </div>
           </div>
-        </CardContent>
-      </Card>
 
-      {/* 4. General Preferences */}
-      <Card className="border-border/80 bg-card shadow-xs divide-y divide-border/60">
-        <div className="p-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <Bell className="h-4 w-4" />
+          {/* Mode : Clair / Sombre / Auto */}
+          <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 min-h-[52px]">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted text-foreground">
+                <Sun className="h-4 w-4" />
+              </div>
+              <span className="text-sm font-medium text-foreground">Mode</span>
             </div>
-            <div>
-              <p className="text-xs font-semibold text-foreground">Notifications & Rappels</p>
-              <p className="text-[11px] text-muted-foreground">
-                Alertes d&apos;échéances et récapitulatif quotidien
-              </p>
+
+            <div
+              role="radiogroup"
+              aria-label="Mode d'affichage"
+              className="inline-flex rounded-xl bg-muted p-1"
+            >
+              <button
+                type="button"
+                role="radio"
+                aria-checked={theme === "light"}
+                onClick={() => setTheme("light")}
+                className={`apple-press flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium min-h-[34px] ${
+                  theme === "light"
+                    ? "bg-card text-foreground shadow-xs"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Sun className="h-3.5 w-3.5" />
+                Clair
+              </button>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={theme === "dark"}
+                onClick={() => setTheme("dark")}
+                className={`apple-press flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium min-h-[34px] ${
+                  theme === "dark"
+                    ? "bg-card text-foreground shadow-xs"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Moon className="h-3.5 w-3.5" />
+                Sombre
+              </button>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={theme === "system"}
+                onClick={() => setTheme("system")}
+                className={`apple-press flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium min-h-[34px] ${
+                  theme === "system"
+                    ? "bg-card text-foreground shadow-xs"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Laptop className="h-3.5 w-3.5" />
+                Auto
+              </button>
             </div>
           </div>
-          <button
-            onClick={() => setNotificationsEnabled(!notificationsEnabled)}
-            className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-              notificationsEnabled ? "bg-primary" : "bg-muted"
-            }`}
-          >
-            <span
-              className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
-                notificationsEnabled ? "translate-x-4" : "translate-x-0"
+        </Card>
+      </div>
+
+      {/* 4. Préférences générales */}
+      <div className="space-y-1.5">
+        <h3 className="px-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Préférences
+        </h3>
+        <Card className="apple-surface border-border/80 bg-card divide-y divide-border/70 p-0 overflow-hidden">
+          <div className="flex items-center justify-between gap-3 px-4 py-3 min-h-[52px]">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--idea)]/15 text-[var(--idea)]">
+                <Bell className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-foreground">Notifications</p>
+                <p className="text-[11px] text-muted-foreground">
+                  Rappels d&apos;échéances et tâches
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={notificationsEnabled}
+              aria-label="Activer les notifications"
+              onClick={() => setNotificationsEnabled(!notificationsEnabled)}
+              className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-150 ${
+                notificationsEnabled ? "bg-[var(--finance)]" : "bg-muted"
               }`}
-            />
-          </button>
-        </div>
-
-        <div className="p-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-              <Coins className="h-4 w-4" />
-            </div>
-            <div>
-              <p className="text-xs font-semibold text-foreground">Devise principale</p>
-              <p className="text-[11px] text-muted-foreground">Affichage des montants financiers</p>
-            </div>
+            >
+              <span
+                className={`pointer-events-none inline-block h-6 w-6 rounded-full bg-white shadow-sm transition-transform duration-150 ${
+                  notificationsEnabled ? "translate-x-5" : "translate-x-0"
+                }`}
+              />
+            </button>
           </div>
-          <select
-            value={currency}
-            onChange={(e) => setCurrency(e.target.value)}
-            className="h-8 rounded-lg border border-input bg-background px-2.5 text-xs text-foreground outline-none"
-          >
-            <option value="EUR (€)">EUR (€)</option>
-            <option value="USD ($)">USD ($)</option>
-            <option value="XOF (CFA)">XOF (CFA)</option>
-          </select>
-        </div>
 
-        <div className="p-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-              <Shield className="h-4 w-4" />
+          <div className="flex items-center justify-between gap-3 px-4 py-3 min-h-[52px]">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--finance)]/15 text-[var(--finance)]">
+                <Coins className="h-4 w-4" />
+              </div>
+              <span className="text-sm font-medium text-foreground">Devise</span>
             </div>
-            <div>
-              <p className="text-xs font-semibold text-foreground">Données & Réinitialisation</p>
-              <p className="text-[11px] text-muted-foreground">
-                Recharger les données de démonstration
-              </p>
-            </div>
+            <select
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value)}
+              aria-label="Sélectionner la devise"
+              className="h-9 rounded-lg border border-input bg-secondary/60 px-2.5 text-xs font-medium text-foreground outline-none focus:ring-2 focus:ring-ring tabular-nums"
+            >
+              <option value="EUR (€)">EUR (€)</option>
+              <option value="USD ($)">USD ($)</option>
+              <option value="XOF (CFA)">XOF (CFA)</option>
+            </select>
           </div>
-          <Button
-            variant="outline"
-            size="xs"
-            onClick={handleReset}
-            className="text-xs"
-          >
-            {resetDone ? "Réinitialisé ✓" : "Réinitialiser"}
-          </Button>
-        </div>
+
+          <div className="flex items-center justify-between gap-3 px-4 py-3 min-h-[52px]">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                <RotateCcw className="h-4 w-4" />
+              </div>
+              <span className="text-sm font-medium text-foreground">
+                Données de démonstration
+              </span>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleReset}
+              className="h-9 text-xs"
+            >
+              {resetDone ? "Réinitialisé ✓" : "Réinitialiser"}
+            </Button>
+          </div>
+        </Card>
+      </div>
+
+      {/* 5. Session / Déconnexion */}
+      <Card className="apple-surface border-border/80 bg-card p-0 overflow-hidden">
+        <button
+          type="button"
+          onClick={onLogout}
+          className="apple-press flex w-full items-center justify-center gap-2 px-4 py-3.5 min-h-[48px] text-sm font-semibold text-destructive hover:bg-destructive/8"
+        >
+          <LogOut className="h-4 w-4" />
+          Se déconnecter
+        </button>
       </Card>
     </div>
   );
