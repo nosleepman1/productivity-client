@@ -25,23 +25,32 @@ import {
   toTransactionDto,
   transactionFormSchema,
 } from "@/features/finances/schemas/transaction.schema";
+import { toDateInputValue } from "@/features/finances/utils/format";
+import { useCreateNoteMutation } from "@/features/productivity/hooks/useNotes";
+import { useCreateProjetMutation } from "@/features/productivity/hooks/useProjets";
+import {
+  noteFormSchema,
+  toCreateNoteDto,
+} from "@/features/productivity/schemas/note.schema";
+import {
+  projetFormSchema,
+  toCreateProjetDto,
+} from "@/features/productivity/schemas/projet.schema";
 
 interface QuickAddModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddProject?: (proj: { title: string; tag: string; deadline: string }) => void;
-  onAddIdea?: (idea: { title: string; category: string; description: string }) => void;
 }
 
 export const QuickAddModal: React.FC<QuickAddModalProps> = ({
   open,
   onOpenChange,
-  onAddProject,
-  onAddIdea,
 }) => {
   const { activeEspaceId } = useActiveEspace();
   const createRevenu = useCreateRevenuMutation(activeEspaceId);
   const createDepense = useCreateDepenseMutation(activeEspaceId);
+  const createProjet = useCreateProjetMutation(activeEspaceId);
+  const createNote = useCreateNoteMutation(activeEspaceId);
 
   const [activeType, setActiveType] = useState<"finance" | "projet" | "idee">("finance");
 
@@ -53,13 +62,16 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
 
   // Project form
   const [projTitle, setProjTitle] = useState("");
-  const [projTag, setProjTag] = useState("Prioritaire");
-  const [projDeadline, setProjDeadline] = useState("Dans 2 semaines");
+  const [projDesc, setProjDesc] = useState("");
+  const [projDebut, setProjDebut] = useState(() =>
+    toDateInputValue(new Date().toISOString()),
+  );
+  const [projError, setProjError] = useState<string | null>(null);
 
-  // Idea form
+  // Note / Idea form
   const [ideaTitle, setIdeaTitle] = useState("");
-  const [ideaCat, setIdeaCat] = useState("Produit");
   const [ideaDesc, setIdeaDesc] = useState("");
+  const [ideaError, setIdeaError] = useState<string | null>(null);
 
   const [savedSuccess, setSavedSuccess] = useState(false);
 
@@ -86,19 +98,36 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
       }
       setTxTitle("");
       setTxAmount("");
-    } else if (activeType === "projet" && projTitle) {
-      onAddProject?.({
-        title: projTitle,
-        tag: projTag,
-        deadline: projDeadline,
+    } else if (activeType === "projet") {
+      const parsed = projetFormSchema.safeParse({
+        titre: projTitle,
+        description: projDesc,
+        dateDebut: projDebut,
+        estTermine: false,
       });
+
+      if (!parsed.success) {
+        setProjError(parsed.error.issues[0]?.message ?? "Données invalides");
+        return;
+      }
+
+      setProjError(null);
+      await createProjet.mutateAsync(toCreateProjetDto(parsed.data));
       setProjTitle("");
-    } else if (activeType === "idee" && ideaTitle) {
-      onAddIdea?.({
-        title: ideaTitle,
-        category: ideaCat,
-        description: ideaDesc,
+      setProjDesc("");
+    } else if (activeType === "idee") {
+      const parsed = noteFormSchema.safeParse({
+        titre: ideaTitle,
+        contenu: ideaDesc,
       });
+
+      if (!parsed.success) {
+        setIdeaError(parsed.error.issues[0]?.message ?? "Données invalides");
+        return;
+      }
+
+      setIdeaError(null);
+      await createNote.mutateAsync(toCreateNoteDto(parsed.data));
       setIdeaTitle("");
       setIdeaDesc("");
     }
@@ -237,7 +266,7 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
             <>
               <div>
                 <label className="text-xs font-medium text-foreground mb-1 block">
-                  Titre du projet / jalon
+                  Titre du projet
                 </label>
                 <Input
                   required
@@ -248,34 +277,35 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="text-xs font-medium text-foreground mb-1 block">
-                    Priorité
-                  </label>
-                  <select
-                    value={projTag}
-                    onChange={(e) => setProjTag(e.target.value)}
-                    className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-xs text-foreground outline-none focus:border-ring"
-                  >
-                    <option value="Urgente">Urgente</option>
-                    <option value="Prioritaire">Prioritaire</option>
-                    <option value="Normale">Normale</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="text-xs font-medium text-foreground mb-1 block">
-                    Échéance
-                  </label>
-                  <Input
-                    placeholder="ex: Vendredi prochain"
-                    value={projDeadline}
-                    onChange={(e) => setProjDeadline(e.target.value)}
-                    className="bg-background text-sm"
-                  />
-                </div>
+              <div>
+                <label className="text-xs font-medium text-foreground mb-1 block">
+                  Description
+                </label>
+                <Textarea
+                  required
+                  placeholder="Objectif et livrables clés..."
+                  value={projDesc}
+                  onChange={(e) => setProjDesc(e.target.value)}
+                  rows={2}
+                  className="bg-background text-xs"
+                />
               </div>
+
+              <div>
+                <label className="text-xs font-medium text-foreground mb-1 block">
+                  Date de début
+                </label>
+                <Input
+                  required
+                  type="date"
+                  value={projDebut}
+                  onChange={(e) => setProjDebut(e.target.value)}
+                  className="bg-background text-sm"
+                />
+              </div>
+              {projError && (
+                <p className="text-xs text-rose-500">{projError}</p>
+              )}
             </>
           )}
 
@@ -283,11 +313,11 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
             <>
               <div>
                 <label className="text-xs font-medium text-foreground mb-1 block">
-                  Titre de l&apos;idée
+                  Titre de la note / idée
                 </label>
                 <Input
                   required
-                  placeholder="ex: Automatiser les relances avec l'IA"
+                  placeholder="ex: Automatiser les relances"
                   value={ideaTitle}
                   onChange={(e) => setIdeaTitle(e.target.value)}
                   className="bg-background text-sm"
@@ -296,32 +326,20 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
 
               <div>
                 <label className="text-xs font-medium text-foreground mb-1 block">
-                  Catégorie
-                </label>
-                <select
-                  value={ideaCat}
-                  onChange={(e) => setIdeaCat(e.target.value)}
-                  className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-xs text-foreground outline-none focus:border-ring"
-                >
-                  <option value="Produit">Produit</option>
-                  <option value="Growth & Marketing">Growth &amp; Marketing</option>
-                  <option value="Quick Win">Quick Win</option>
-                  <option value="Stratégie">Stratégie</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="text-xs font-medium text-foreground mb-1 block">
-                  Notes / Contexte (optionnel)
+                  Contenu
                 </label>
                 <Textarea
+                  required
                   placeholder="Détails, liens ou pensées clés..."
                   value={ideaDesc}
                   onChange={(e) => setIdeaDesc(e.target.value)}
-                  rows={2}
+                  rows={3}
                   className="bg-background text-xs"
                 />
               </div>
+              {ideaError && (
+                <p className="text-xs text-rose-500">{ideaError}</p>
+              )}
             </>
           )}
 
