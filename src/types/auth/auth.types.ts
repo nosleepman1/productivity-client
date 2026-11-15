@@ -52,31 +52,27 @@ export interface ForgotPasswordDto {
 export interface ResetPasswordDto {
   email: string;
   code: string;
-  newPassword: string;
+  nouveauMotDePasse: string;
 }
 
 export interface ChangeEmailRequestDto {
-  newEmail: string;
-  currentPassword?: string;
+  nouvelEmail: string;
+  motDePasse?: string;
+  idTokenGoogle?: string;
 }
 
 export interface ChangeEmailConfirmDto {
-  newEmail: string;
   code: string;
-}
-
-export interface ChangePasswordRequestDto {
-  currentPassword?: string;
 }
 
 export interface ChangePasswordConfirmDto {
   code: string;
-  newPassword: string;
+  nouveauMotDePasse: string;
 }
 
 export interface DeleteAccountDto {
-  password?: string;
-  confirmationText?: string;
+  motDePasse?: string;
+  idTokenGoogle?: string;
 }
 
 export interface SessionItem {

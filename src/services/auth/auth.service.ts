@@ -5,7 +5,6 @@ import type {
   ChangeEmailConfirmDto,
   ChangeEmailRequestDto,
   ChangePasswordConfirmDto,
-  ChangePasswordRequestDto,
   DeleteAccountDto,
   ForgotPasswordDto,
   GoogleLoginDto,
@@ -87,12 +86,9 @@ export const authService = {
     return data;
   },
 
-  async requestPasswordChange(
-    payload: ChangePasswordRequestDto,
-  ): Promise<MessageResponse> {
+  async requestPasswordChange(): Promise<MessageResponse> {
     const { data } = await api.post<MessageResponse>(
       "/auth/password/change/request",
-      payload,
     );
     return data;
   },

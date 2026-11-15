@@ -55,7 +55,7 @@ export const ForgotPasswordStep: React.FC<ForgotPasswordStepProps> = ({
       await authService.resetPassword({
         email: email.trim(),
         code: code.trim(),
-        newPassword,
+        nouveauMotDePasse: newPassword,
       });
       onResetSuccess();
     } catch (err) {
