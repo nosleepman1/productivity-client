@@ -32,7 +32,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
       {/* Mobile & Tablet Bar Container */}
       <nav
         aria-label="Navigation principale"
-        className="pointer-events-auto w-full max-w-lg md:mb-4 md:rounded-2xl border-t md:border border-border/80 bg-background/85 dark:bg-card/85 backdrop-blur-2xl shadow-[0_-10px_25px_-5px_rgba(0,0,0,0.05)] dark:shadow-[0_-10px_35px_-5px_rgba(0,0,0,0.6)] px-3 py-2 transition-all duration-300"
+        className="apple-glass-bar apple-surface pointer-events-auto w-full max-w-lg md:mb-4 md:rounded-2xl border-t md:border px-3 py-2"
       >
         <div className="relative flex items-center justify-between">
           {/* 1. GAUCHE: FINANCE */}

@@ -35,16 +35,13 @@ export const Header: React.FC<HeaderProps> = ({ activeTab }) => {
   const current = titles[activeTab];
 
   return (
-    <header className="sticky top-0 z-30 w-full border-b border-border/70 bg-background/85 backdrop-blur-xl transition-colors duration-300">
+    <header className="apple-glass-bar sticky top-0 z-30 w-full border-b transition-colors duration-200">
       <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3 sm:px-6">
         {/* Brand / Left Info */}
         <div className="flex items-center gap-3">
-          <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-primary/90 to-primary/60 text-primary-foreground shadow-md shadow-primary/25 ring-1 ring-white/20">
-            <Sparkles className="h-5 w-5 animate-pulse" />
-            <span className="absolute -bottom-0.5 -right-0.5 flex h-3 w-3">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-background" />
-            </span>
+          <div className="relative flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm ring-1 ring-black/5 dark:ring-white/15">
+            <Sparkles className="h-5 w-5" />
+            <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-[var(--finance)] ring-2 ring-background" />
           </div>
 
           <div>
@@ -66,13 +63,13 @@ export const Header: React.FC<HeaderProps> = ({ activeTab }) => {
           <button
             onClick={toggleTheme}
             aria-label="Basculer le thème"
-            className="group relative flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card/60 p-0 text-foreground shadow-xs transition-all duration-200 hover:border-primary/50 hover:bg-accent active:scale-95"
+            className="apple-press group relative flex h-11 w-11 items-center justify-center rounded-2xl border border-border bg-card/80 p-0 text-foreground shadow-xs hover:border-primary/50 hover:bg-accent"
             title={`Mode actuel: ${theme === "system" ? `Système (${resolvedTheme})` : theme}. Cliquez pour basculer.`}
           >
             {resolvedTheme === "dark" ? (
-              <Moon className="h-4 w-4 text-primary transition-transform duration-300 group-hover:-rotate-12" />
+              <Moon className="h-4 w-4 text-primary" />
             ) : (
-              <Sun className="h-4 w-4 text-amber-500 transition-transform duration-300 group-hover:rotate-45" />
+              <Sun className="h-4 w-4 text-amber-500" />
             )}
             <span className="sr-only">Changer de thème</span>
           </button>
@@ -80,7 +77,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab }) => {
           {/* Notifications Button */}
           <button
             aria-label="Notifications"
-            className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card/60 p-0 text-muted-foreground shadow-xs transition-all duration-200 hover:text-foreground hover:bg-accent active:scale-95"
+            className="apple-press relative flex h-11 w-11 items-center justify-center rounded-2xl border border-border bg-card/80 p-0 text-muted-foreground shadow-xs hover:text-foreground hover:bg-accent"
           >
             <Bell className="h-4 w-4" />
             <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-primary ring-2 ring-card" />

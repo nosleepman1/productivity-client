@@ -24,7 +24,7 @@ interface ParametresViewProps {
 }
 
 export const ParametresView: React.FC<ParametresViewProps> = ({ onResetData }) => {
-  const { theme, setTheme, resolvedTheme } = useTheme();
+  const { theme, setTheme, resolvedTheme, themePreset, setThemePreset } = useTheme();
 
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [currency, setCurrency] = useState("EUR (€)");
@@ -62,24 +62,98 @@ export const ParametresView: React.FC<ParametresViewProps> = ({ onResetData }) =
         </CardContent>
       </Card>
 
-      {/* 2. THEME SELECTOR SECTION */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
+      {/* 2. THEME PRESET & MODE SELECTOR SECTION */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between gap-2">
           <div>
             <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
               <Palette className="h-4 w-4 text-primary" />
-              Thème & Apparence
+              Thème Apple &amp; Apparence
             </h3>
             <p className="text-xs text-muted-foreground">
-              Design system Shadcn sur-mesure pour haute productivité.
+              Deux systèmes visuels ergonomiques inspirés d&apos;Apple HIG.
             </p>
           </div>
-          <span className="rounded-md border border-border bg-muted/50 px-2 py-0.5 text-[11px] font-medium text-foreground">
-            Actuel: {theme === "system" ? `Système (${resolvedTheme})` : theme}
+          <span className="rounded-md border border-border bg-muted/50 px-2.5 py-1 text-[11px] font-medium text-foreground tabular-nums">
+            {themePreset === "cupertino" ? "Cupertino" : "Sonoma"} ·{" "}
+            {theme === "system" ? `Système (${resolvedTheme})` : theme === "light" ? "Clair" : "Sombre"}
           </span>
         </div>
 
-        {/* 3 Visual Cards for Theme Picking */}
+        {/* 2.1 Apple Theme Presets */}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <button
+            type="button"
+            onClick={() => setThemePreset("cupertino")}
+            className={`apple-press group relative flex flex-col rounded-2xl border p-4 text-left ${
+              themePreset === "cupertino"
+                ? "border-primary bg-primary/5 ring-2 ring-primary/35 apple-surface"
+                : "border-border/80 bg-card hover:border-primary/40 hover:bg-muted/30"
+            }`}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <span className="text-xs font-bold text-foreground block">
+                  Cupertino Paper &amp; Ink
+                </span>
+                <span className="text-[11px] text-muted-foreground">
+                  Style Apple Notes · Clarté &amp; contraste pur
+                </span>
+              </div>
+              {themePreset === "cupertino" && (
+                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                  <Check className="h-3.5 w-3.5 stroke-[3]" />
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-2 rounded-xl border border-black/10 dark:border-white/10 bg-[#f5f5f7] dark:bg-[#1c1c1e] p-2.5">
+              <span className="h-5 w-5 rounded-full bg-[#007AFF] dark:bg-[#0A84FF] shadow-xs" />
+              <span className="h-5 w-5 rounded-full bg-[#34C759] dark:bg-[#30D158] shadow-xs" />
+              <span className="h-5 w-5 rounded-full bg-[#5856D6] dark:bg-[#5E5CE6] shadow-xs" />
+              <span className="h-5 w-5 rounded-full bg-[#FF9500] dark:bg-[#FF9F0A] shadow-xs" />
+              <span className="ml-auto text-[10px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">
+                SF Blue
+              </span>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setThemePreset("sonoma")}
+            className={`apple-press group relative flex flex-col rounded-2xl border p-4 text-left ${
+              themePreset === "sonoma"
+                ? "border-primary bg-primary/5 ring-2 ring-primary/35 apple-surface"
+                : "border-border/80 bg-card hover:border-primary/40 hover:bg-muted/30"
+            }`}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <span className="text-xs font-bold text-foreground block">
+                  Sonoma Frosted Glass
+                </span>
+                <span className="text-[11px] text-muted-foreground">
+                  Style macOS Focus · Verre dépoli &amp; Teal
+                </span>
+              </div>
+              {themePreset === "sonoma" && (
+                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                  <Check className="h-3.5 w-3.5 stroke-[3]" />
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-2 rounded-xl border border-slate-900/10 dark:border-white/10 bg-[#f2f4f8] dark:bg-[#161922] p-2.5">
+              <span className="h-5 w-5 rounded-full bg-[#0D9488] dark:bg-[#38BDF8] shadow-xs" />
+              <span className="h-5 w-5 rounded-full bg-[#10B981] dark:bg-[#34D399] shadow-xs" />
+              <span className="h-5 w-5 rounded-full bg-[#3B82F6] dark:bg-[#60A5FA] shadow-xs" />
+              <span className="h-5 w-5 rounded-full bg-[#F59E0B] dark:bg-[#FBBF24] shadow-xs" />
+              <span className="ml-auto text-[10px] font-semibold text-slate-800 dark:text-slate-100">
+                Focus Teal
+              </span>
+            </div>
+          </button>
+        </div>
+
+        {/* 3 Visual Cards for Mode Picking */}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           {/* Light Theme Card */}
           <button
