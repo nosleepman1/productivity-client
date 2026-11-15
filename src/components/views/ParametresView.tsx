@@ -2,6 +2,13 @@ import React, { useState } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuthStore } from "@/store/auth.store";
 import {
+  useProfil,
+  useUpdateProfilMutation,
+} from "@/features/auth/hooks/useProfil";
+import { useSessions } from "@/features/auth/hooks/useAuth";
+import { ProfilEditModal } from "@/features/auth/components/ProfilEditModal";
+import { SessionsModal } from "@/features/auth/components/SessionsModal";
+import {
   useActiveEspace,
   useSwitchEspace,
 } from "@/features/espaces/hooks/useEspaces";
@@ -21,6 +28,7 @@ import {
   RotateCcw,
   Check,
   Plus,
+  Shield,
 } from "lucide-react";
 
 interface ParametresViewProps {
@@ -34,13 +42,19 @@ export const ParametresView: React.FC<ParametresViewProps> = ({
 }) => {
   const { theme, setTheme, themePreset, setThemePreset } = useTheme();
   const user = useAuthStore((s) => s.user);
+  const { data: profil } = useProfil();
+  const updateProfilMutation = useUpdateProfilMutation();
+  const { data: sessions = [] } = useSessions();
   const { espaces, activeEspaceId, isLoading: espacesLoading } = useActiveEspace();
   const switchEspace = useSwitchEspace();
 
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [currency, setCurrency] = useState("EUR (€)");
   const [isCreateEspaceOpen, setIsCreateEspaceOpen] = useState(false);
+  const [isProfilOpen, setIsProfilOpen] = useState(false);
+  const [isSessionsOpen, setIsSessionsOpen] = useState(false);
   const [resetDone, setResetDone] = useState(false);
+
+  const notificationsEnabled = profil?.notifications ?? true;
 
   const initials = (user?.name ?? "AD")
     .split(" ")
@@ -59,7 +73,11 @@ export const ParametresView: React.FC<ParametresViewProps> = ({
     <div className="space-y-6 pb-24">
       {/* 1. Compte / Profil (Apple Settings Header Row) */}
       <Card className="apple-surface border-border/80 bg-card p-0 overflow-hidden">
-        <div className="flex items-center justify-between gap-3 p-4 min-h-[68px]">
+        <button
+          type="button"
+          onClick={() => setIsProfilOpen(true)}
+          className="apple-press flex w-full items-center justify-between gap-3 p-4 min-h-[68px] text-left hover:bg-muted/30"
+        >
           <div className="flex items-center gap-3.5">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
               {initials || "AD"}
@@ -74,7 +92,7 @@ export const ParametresView: React.FC<ParametresViewProps> = ({
             </div>
           </div>
           <ChevronRight className="h-4 w-4 text-muted-foreground/70 shrink-0" />
-        </div>
+        </button>
       </Card>
 
       {/* 2. Espace de travail (Multi-Espaces API) */}
@@ -270,7 +288,12 @@ export const ParametresView: React.FC<ParametresViewProps> = ({
               role="switch"
               aria-checked={notificationsEnabled}
               aria-label="Activer les notifications"
-              onClick={() => setNotificationsEnabled(!notificationsEnabled)}
+              disabled={updateProfilMutation.isPending}
+              onClick={() =>
+                updateProfilMutation.mutate({
+                  notifications: !notificationsEnabled,
+                })
+              }
               className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-150 ${
                 notificationsEnabled ? "bg-[var(--finance)]" : "bg-muted"
               }`}
@@ -327,6 +350,28 @@ export const ParametresView: React.FC<ParametresViewProps> = ({
               )}
             </Button>
           </div>
+          <button
+            type="button"
+            onClick={() => setIsSessionsOpen(true)}
+            className="apple-press flex w-full items-center justify-between gap-3 px-4 py-3 min-h-[52px] text-left hover:bg-muted/30"
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/12 text-primary">
+                <Shield className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-foreground">
+                  Appareils &amp; Sessions
+                </p>
+                <p className="text-[11px] text-muted-foreground tabular-nums">
+                  {sessions.length > 0
+                    ? `${sessions.length} session(s) active(s)`
+                    : "Gérer les connexions actives"}
+                </p>
+              </div>
+            </div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground/70 shrink-0" />
+          </button>
         </Card>
       </div>
 
@@ -341,6 +386,9 @@ export const ParametresView: React.FC<ParametresViewProps> = ({
           Se déconnecter
         </button>
       </Card>
+
+      <ProfilEditModal open={isProfilOpen} onOpenChange={setIsProfilOpen} />
+      <SessionsModal open={isSessionsOpen} onOpenChange={setIsSessionsOpen} />
     </div>
   );
 };
