@@ -1,3 +1,5 @@
+import { extractApiError } from "@/api/api";
+
 /**
  * Formate un montant entier en FCFA avec séparateur de milliers.
  * @param amount Montant entier en FCFA.
@@ -43,4 +45,14 @@ export function toDateInputValue(iso: string | null | undefined): string {
 export function computeProgressPercent(paid: number, total: number): number {
   if (total <= 0) return 0;
   return Math.min(100, Math.max(0, Math.round((paid / total) * 100)));
+}
+
+/**
+ * Extrait un message d'erreur lisible depuis une exception API NestJS.
+ * @param err Erreur interceptée par TanStack Query ou Axios.
+ * @returns Chaîne unique prête pour un toast utilisateur.
+ */
+export function getApiErrorMessage(err: unknown): string {
+  const { message } = extractApiError(err);
+  return Array.isArray(message) ? message.join(" · ") : message;
 }
