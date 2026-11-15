@@ -1,57 +1,15 @@
 import { useState } from "react";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { AppRoutes } from "./routes/AppRoutes";
+import { ToastContainer } from "./components/ui/ToastContainer";
 import { useLogoutMutation } from "./features/auth/hooks/useAuth";
 import { Header } from "./components/layout/Header";
 import { BottomNav, type NavTab } from "./components/layout/BottomNav";
-import { FinanceView, type Transaction } from "./components/views/FinanceView";
+import { FinanceView } from "./components/views/FinanceView";
 import { ProjetsView, type Project, type TaskItem } from "./components/views/ProjetsView";
 import { IdeesView, type IdeaItem } from "./components/views/IdeesView";
 import { ParametresView } from "./components/views/ParametresView";
 import { QuickAddModal } from "./components/modals/QuickAddModal";
-
-const INITIAL_TRANSACTIONS: Transaction[] = [
-  {
-    id: "tx-1",
-    title: "Virement Client SaaS - Q4",
-    amount: 4250.0,
-    type: "income",
-    category: "Revenus Pro",
-    date: "Aujourd'hui, 14:32",
-  },
-  {
-    id: "tx-2",
-    title: "Abonnement Vercel Pro",
-    amount: 20.0,
-    type: "expense",
-    category: "Infrastructure",
-    date: "Hier, 09:15",
-  },
-  {
-    id: "tx-3",
-    title: "Prestation Audit UI/UX",
-    amount: 1800.0,
-    type: "income",
-    category: "Consulting",
-    date: "12 Nov",
-  },
-  {
-    id: "tx-4",
-    title: "Licence JetBrains & GitHub Copilot",
-    amount: 45.0,
-    type: "expense",
-    category: "Outils Dev",
-    date: "10 Nov",
-  },
-  {
-    id: "tx-5",
-    title: "Serveurs Base de données Cloud",
-    amount: 140.0,
-    type: "expense",
-    category: "Infrastructure",
-    date: "08 Nov",
-  },
-];
 
 const INITIAL_PROJECTS: Project[] = [
   {
@@ -180,29 +138,11 @@ function ProductivityApp() {
   const logoutMutation = useLogoutMutation();
 
   // Core Data States
-  const [transactions, setTransactions] = useState<Transaction[]>(INITIAL_TRANSACTIONS);
   const [projects, setProjects] = useState<Project[]>(INITIAL_PROJECTS);
   const [tasks, setTasks] = useState<TaskItem[]>(INITIAL_TASKS);
   const [ideas, setIdeas] = useState<IdeaItem[]>(INITIAL_IDEAS);
 
   // Handlers for Additions
-  const handleAddTransaction = (newTx: {
-    title: string;
-    amount: number;
-    type: "income" | "expense";
-    category: string;
-  }) => {
-    const tx: Transaction = {
-      id: `tx-${Date.now()}`,
-      title: newTx.title,
-      amount: newTx.amount,
-      type: newTx.type,
-      category: newTx.category,
-      date: "À l'instant",
-    };
-    setTransactions((prev) => [tx, ...prev]);
-  };
-
   const handleAddProject = (newProj: {
     title: string;
     tag: string;
@@ -258,7 +198,6 @@ function ProductivityApp() {
   };
 
   const handleResetData = () => {
-    setTransactions(INITIAL_TRANSACTIONS);
     setProjects(INITIAL_PROJECTS);
     setTasks(INITIAL_TASKS);
     setIdeas(INITIAL_IDEAS);
@@ -273,12 +212,7 @@ function ProductivityApp() {
 
       {/* 2. Main Content Canvas */}
       <main className="mx-auto max-w-4xl px-4 pt-5 pb-28 sm:px-6">
-        {activeTab === "finance" && (
-          <FinanceView
-            transactions={transactions}
-            onOpenQuickAdd={() => setIsQuickAddOpen(true)}
-          />
-        )}
+        {activeTab === "finance" && <FinanceView />}
 
         {activeTab === "projets" && (
           <ProjetsView
@@ -324,7 +258,6 @@ function ProductivityApp() {
       <QuickAddModal
         open={isQuickAddOpen}
         onOpenChange={setIsQuickAddOpen}
-        onAddTransaction={handleAddTransaction}
         onAddProject={handleAddProject}
         onAddIdea={handleAddIdea}
       />
@@ -335,6 +268,7 @@ function ProductivityApp() {
 export default function App() {
   return (
     <ThemeProvider>
+      <ToastContainer />
       <AppRoutes dashboard={<ProductivityApp />} />
     </ThemeProvider>
   );
