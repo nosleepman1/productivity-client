@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { AppRoutes } from "./routes/AppRoutes";
+import { useLogoutMutation } from "./features/auth/hooks/useAuth";
 import { Header } from "./components/layout/Header";
 import { BottomNav, type NavTab } from "./components/layout/BottomNav";
 import { FinanceView, type Transaction } from "./components/views/FinanceView";
@@ -175,6 +177,7 @@ const INITIAL_IDEAS: IdeaItem[] = [
 function ProductivityApp() {
   const [activeTab, setActiveTab] = useState<NavTab>("finance");
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
+  const logoutMutation = useLogoutMutation();
 
   // Core Data States
   const [transactions, setTransactions] = useState<Transaction[]>(INITIAL_TRANSACTIONS);
@@ -299,7 +302,10 @@ function ProductivityApp() {
         )}
 
         {activeTab === "parametres" && (
-          <ParametresView onResetData={handleResetData} />
+          <ParametresView
+            onResetData={handleResetData}
+            onLogout={() => logoutMutation.mutate()}
+          />
         )}
       </main>
 
@@ -329,7 +335,7 @@ function ProductivityApp() {
 export default function App() {
   return (
     <ThemeProvider>
-      <ProductivityApp />
+      <AppRoutes dashboard={<ProductivityApp />} />
     </ThemeProvider>
   );
 }
