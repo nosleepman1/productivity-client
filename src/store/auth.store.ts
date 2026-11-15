@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { configureApiAuth } from "@/api/api";
 import type { AuthUser } from "@/types/auth";
+import { useEspaceStore } from "./espace.store";
 
 interface AuthState {
   accessToken: string | null;
@@ -20,13 +21,15 @@ export const useAuthStore = create<AuthState>((set) => ({
   isAuthenticated: false,
   isBootstrapping: true,
 
-  setAuth: (accessToken, user) =>
+  setAuth: (accessToken, user) => {
+    useEspaceStore.getState().syncOwner(user.id);
     set({
       accessToken,
       user,
       isAuthenticated: true,
       isBootstrapping: false,
-    }),
+    });
+  },
 
   setAccessToken: (accessToken) =>
     set((state) => ({
@@ -42,13 +45,15 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   setBootstrapping: (isBootstrapping) => set({ isBootstrapping }),
 
-  clearAuth: () =>
+  clearAuth: () => {
+    useEspaceStore.getState().clearEspace();
     set({
       accessToken: null,
       user: null,
       isAuthenticated: false,
       isBootstrapping: false,
-    }),
+    });
+  },
 }));
 
 configureApiAuth({

@@ -1,5 +1,11 @@
 import React, { useState } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useAuthStore } from "@/store/auth.store";
+import {
+  useActiveEspace,
+  useSwitchEspace,
+} from "@/features/espaces/hooks/useEspaces";
+import { EspaceFormModal } from "@/features/espaces/components/EspaceFormModal";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +20,7 @@ import {
   LogOut,
   RotateCcw,
   Check,
+  Plus,
 } from "lucide-react";
 
 interface ParametresViewProps {
@@ -26,11 +33,21 @@ export const ParametresView: React.FC<ParametresViewProps> = ({
   onLogout,
 }) => {
   const { theme, setTheme, themePreset, setThemePreset } = useTheme();
+  const user = useAuthStore((s) => s.user);
+  const { espaces, activeEspaceId, isLoading: espacesLoading } = useActiveEspace();
+  const switchEspace = useSwitchEspace();
 
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [currency, setCurrency] = useState("EUR (€)");
-  const [activeWorkspace, setActiveWorkspace] = useState("Personnel");
+  const [isCreateEspaceOpen, setIsCreateEspaceOpen] = useState(false);
   const [resetDone, setResetDone] = useState(false);
+
+  const initials = (user?.name ?? "AD")
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");
 
   const handleReset = () => {
     onResetData?.();
@@ -45,14 +62,14 @@ export const ParametresView: React.FC<ParametresViewProps> = ({
         <div className="flex items-center justify-between gap-3 p-4 min-h-[68px]">
           <div className="flex items-center gap-3.5">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
-              AD
+              {initials || "AD"}
             </div>
             <div>
               <h2 className="text-sm font-semibold text-foreground sm:text-base">
-                Abdallah DIOUF
+                {user?.name ?? "Utilisateur"}
               </h2>
               <p className="text-xs text-muted-foreground">
-                Compte Pro · Synchronisation prête
+                {user?.email ?? "Session active"}
               </p>
             </div>
           </div>
@@ -78,18 +95,45 @@ export const ParametresView: React.FC<ParametresViewProps> = ({
                 </p>
               </div>
             </div>
-            <select
-              value={activeWorkspace}
-              onChange={(e) => setActiveWorkspace(e.target.value)}
-              aria-label="Sélectionner l'espace de travail"
-              className="h-9 rounded-lg border border-input bg-secondary/60 px-2.5 text-xs font-medium text-foreground outline-none focus:ring-2 focus:ring-ring"
-            >
-              <option value="Personnel">Personnel</option>
-              <option value="Entreprise">Entreprise</option>
-            </select>
+            <div className="flex items-center gap-2">
+              <select
+                value={activeEspaceId ?? ""}
+                disabled={espacesLoading || espaces.length === 0}
+                onChange={(e) => switchEspace(e.target.value)}
+                aria-label="Sélectionner l'espace de travail"
+                className="h-9 max-w-[145px] truncate rounded-lg border border-input bg-secondary/60 px-2.5 text-xs font-medium text-foreground outline-none focus:ring-2 focus:ring-ring disabled:opacity-60"
+              >
+                {espaces.length === 0 ? (
+                  <option value="">
+                    {espacesLoading ? "Chargement..." : "Aucun espace"}
+                  </option>
+                ) : (
+                  espaces.map((esp) => (
+                    <option key={esp.id} value={esp.id}>
+                      {esp.nom}
+                    </option>
+                  ))
+                )}
+              </select>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                aria-label="Créer un nouvel espace"
+                onClick={() => setIsCreateEspaceOpen(true)}
+                className="apple-press h-9 w-9 shrink-0 rounded-lg"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </Card>
       </div>
+
+      <EspaceFormModal
+        open={isCreateEspaceOpen}
+        onOpenChange={setIsCreateEspaceOpen}
+      />
 
       {/* 3. Apparence & Thèmes Apple (Compact Grouped List) */}
       <div className="space-y-1.5">
