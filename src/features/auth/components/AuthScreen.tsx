@@ -23,6 +23,7 @@ import { PasswordStrength } from "./PasswordStrength";
 import { isStrongPassword } from "../utils/password";
 import { VerifyEmailStep } from "./VerifyEmailStep";
 import { ForgotPasswordStep } from "./ForgotPasswordStep";
+import { GoogleSignInButton } from "./GoogleSignInButton";
 
 type AuthView = "login" | "register" | "verify" | "forgot";
 
@@ -438,6 +439,19 @@ export const AuthScreen: React.FC = () => {
                 />
               )}
             </AnimatePresence>
+
+            {(view === "login" || view === "register") && (
+              <div className="mt-5 space-y-4">
+                <div className="relative flex items-center">
+                  <div className="flex-grow border-t border-border/80" />
+                  <span className="mx-3 shrink-0 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                    ou
+                  </span>
+                  <div className="flex-grow border-t border-border/80" />
+                </div>
+                <GoogleSignInButton onError={triggerError} />
+              </div>
+            )}
           </motion.div>
         </div>
       </div>
