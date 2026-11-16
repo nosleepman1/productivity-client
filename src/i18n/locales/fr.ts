@@ -345,13 +345,13 @@ export const fr = {
     saved: "Enregistré !",
   },
   ia: {
-    title: "Salma",
+    title: "Ndimbeul Bot",
     subtitle: "Analyse vos données et agit sur votre espace",
     manualAdd: "Ajout manuel",
     newChat: "Nouvelle discussion",
     history: "Historique",
     noHistory: "Aucune conversation enregistrée",
-    emptyTitle: "Demandez à Salma",
+    emptyTitle: "Demandez à Ndimbeul Bot",
     emptyDesc:
       "Je consulte vos finances, tâches, projets, habitudes et notes en temps réel pour vous répondre ou préparer des actions.",
     placeholder: "Ex : Combien j'ai dépensé en transport ? ou Ajoute 3000 FCFA taxi Wave...",

@@ -1116,7 +1116,7 @@ export const IaCopilotModal: React.FC<IaCopilotModalProps> = ({
                       {quota?.dailyLimit} prompts · {quota?.planNom})
                     </p>
                     <p className="text-[11px] text-[var(--muted-foreground)]">
-                      Passez à un pack supérieur pour continuer avec Salma.
+                      Passez à un pack supérieur pour continuer avec Ndimbeul Bot.
                     </p>
                   </div>
                   {onOpenSubscriptions && (

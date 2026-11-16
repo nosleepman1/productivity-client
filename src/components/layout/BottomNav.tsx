@@ -426,8 +426,8 @@ function CloseNestedButton({
         <button
           type="button"
           onClick={onPlusClick}
-          aria-label="Salma"
-          title="Salma"
+          aria-label="Ndimbeul Bot"
+          title="Ndimbeul Bot"
           className="apple-press flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-600 via-violet-600 to-cyan-500 text-white shadow-sm"
         >
           <BrainCircuit className="h-4.5 w-4.5" />

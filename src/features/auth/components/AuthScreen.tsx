@@ -153,7 +153,7 @@ export const AuthScreen: React.FC = () => {
           >
             <motion.img
               src="/favicon.svg"
-              alt="Productivity"
+              alt="Ndimbeul"
               className="h-14 w-14 rounded-[16px] shadow-md"
               initial={{ scale: 0.85, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -161,7 +161,7 @@ export const AuthScreen: React.FC = () => {
             />
             <div>
               <h1 className="text-xl font-bold tracking-tight text-foreground">
-                Productivity
+                Ndimbeul
               </h1>
               <p className="text-xs text-muted-foreground">
                 {t("auth.appTagline")}

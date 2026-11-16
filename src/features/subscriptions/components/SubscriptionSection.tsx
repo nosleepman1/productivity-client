@@ -230,7 +230,7 @@ export const SubscriptionSection: React.FC = () => {
             <div className="flex items-center justify-between text-xs">
               <span className="inline-flex items-center gap-1.5 font-medium text-foreground">
                 <Zap className="h-3.5 w-3.5 text-amber-500" />
-                Quota Salma IA aujourd&apos;hui
+                Quota Ndimbeul Bot aujourd&apos;hui
               </span>
               <span className="font-semibold tabular-nums text-foreground">
                 {quota.usedToday} / {quota.dailyLimit} prompts

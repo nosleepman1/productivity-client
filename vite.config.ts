@@ -16,8 +16,8 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["favicon.svg", "apple-touch-icon.png"],
       manifest: {
-        name: "Productivity",
-        short_name: "Productivity",
+        name: "Ndimbeul",
+        short_name: "Ndimbeul",
         description:
           "Application de productivité personnelle : finances, projets, tâches et idées.",
         theme_color: "#f5f5f7",
