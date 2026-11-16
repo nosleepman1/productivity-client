@@ -38,21 +38,24 @@ export interface PaiementsDrawerModalProps {
 
 function PaiementQuickForm({
   reste,
+  minDate,
   isSubmitting,
   onSubmit,
 }: {
   reste: number;
+  minDate: string;
   isSubmitting: boolean;
   onSubmit: (dto: CreatePaiementDto) => Promise<void> | void;
 }) {
+  const today = toDateInputValue(new Date().toISOString());
   const [montant, setMontant] = useState(String(reste));
-  const [date, setDate] = useState(toDateInputValue(new Date().toISOString()));
+  const [date, setDate] = useState(today);
   const [note, setNote] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    const schema = buildPaiementFormSchema(reste);
+    const schema = buildPaiementFormSchema(reste, minDate, today);
     const result = schema.safeParse({
       montant: montant.trim() === "" ? NaN : Number(montant),
       date,
@@ -70,8 +73,17 @@ function PaiementQuickForm({
     }
 
     setErrors({});
-    await onSubmit(toCreatePaiementDto(result.data));
-    setNote("");
+    try {
+      await onSubmit(toCreatePaiementDto(result.data));
+      setNote("");
+    } catch (err) {
+      setErrors({
+        form:
+          err instanceof Error
+            ? err.message
+            : "Impossible d'enregistrer ce règlement.",
+      });
+    }
   };
 
   return (
@@ -133,6 +145,11 @@ function PaiementQuickForm({
       />
       {errors.note && (
         <p className="mt-1 text-xs text-rose-500">{errors.note}</p>
+      )}
+      {errors.form && (
+        <p className="mt-2 rounded-lg bg-rose-500/10 px-3 py-1.5 text-xs font-medium text-rose-500">
+          {errors.form}
+        </p>
       )}
 
       <button
@@ -244,6 +261,7 @@ export function PaiementsDrawerModal({
                 <PaiementQuickForm
                   key={`${item.id}-${item.reste}`}
                   reste={item.reste}
+                  minDate={toDateInputValue(item.date)}
                   isSubmitting={isSubmitting}
                   onSubmit={onAddPaiement}
                 />

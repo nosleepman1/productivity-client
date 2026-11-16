@@ -1,6 +1,13 @@
 import { useState, type FormEvent } from "react";
-import { UserPlus, X } from "lucide-react";
+import { HandCoins, Receipt, UserPlus } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
+import {
+  FORM_INPUT_CLASS,
+  FORM_SELECT_CLASS,
+  FormActions,
+  FormField,
+  FormSheet,
+} from "@/components/ui/FormSheet";
 import {
   useContacts,
   useCreateContactMutation,
@@ -16,6 +23,7 @@ import {
   toSuiviDto,
 } from "@/features/finances/schemas/suivi.schema";
 import { toDateInputValue } from "@/features/finances/utils/format";
+import { cn } from "@/lib/utils";
 import type { ContactType } from "@/types/contacts";
 import type {
   CreateCreanceDto,
@@ -132,64 +140,70 @@ function SuiviInnerForm({
       return;
     }
 
+    if (initialData && result.data.montant < initialData.montantPaye) {
+      setErrors({
+        montant: `Le montant total ne peut pas être inférieur au montant déjà réglé (${initialData.montantPaye.toLocaleString("fr-FR")} FCFA)`,
+      });
+      return;
+    }
+
     setErrors({});
     onSubmit(toSuiviDto(result.data, isEditing));
   };
 
   return (
-    <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <div>
-          <label
-            htmlFor="suivi-montant"
-            className="mb-1.5 block text-xs font-medium text-[var(--text-secondary)]"
-          >
-            Montant total (FCFA)
-          </label>
-          <input
-            id="suivi-montant"
-            type="number"
-            inputMode="numeric"
-            min={1}
-            step={1}
-            placeholder="Ex : 150000"
-            value={montant}
-            onChange={(e) => setMontant(e.target.value)}
-            className="min-h-[44px] w-full rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-3.5 text-base font-semibold tabular-nums text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
-            autoFocus
-          />
-          {errors.montant && (
-            <p className="mt-1 text-xs text-rose-500">{errors.montant}</p>
-          )}
-        </div>
+        <FormField
+          htmlFor="suivi-montant"
+          label="Montant total"
+          hint="FCFA"
+          required
+          error={errors.montant}
+        >
+          <div className="relative">
+            <input
+              id="suivi-montant"
+              type="number"
+              inputMode="numeric"
+              min={1}
+              step={1}
+              placeholder="150 000"
+              value={montant}
+              onChange={(e) => setMontant(e.target.value)}
+              className={cn(
+                FORM_INPUT_CLASS,
+                "pr-16 font-bold tabular-nums",
+              )}
+            />
+            <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-xs font-bold tracking-wider text-[var(--muted-foreground)]">
+              FCFA
+            </span>
+          </div>
+        </FormField>
 
-        <div>
-          <label
-            htmlFor="suivi-date"
-            className="mb-1.5 block text-xs font-medium text-[var(--text-secondary)]"
-          >
-            Date d'origine
-          </label>
+        <FormField
+          htmlFor="suivi-date"
+          label="Date d'origine"
+          required
+          error={errors.date}
+        >
           <input
             id="suivi-date"
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="min-h-[44px] w-full rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-3.5 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
+            className={cn(FORM_INPUT_CLASS, "tabular-nums")}
           />
-          {errors.date && (
-            <p className="mt-1 text-xs text-rose-500">{errors.date}</p>
-          )}
-        </div>
+        </FormField>
       </div>
 
-      <div>
-        <label
-          htmlFor="suivi-description"
-          className="mb-1.5 block text-xs font-medium text-[var(--text-secondary)]"
-        >
-          Description
-        </label>
+      <FormField
+        htmlFor="suivi-description"
+        label="Description"
+        required
+        error={errors.description}
+      >
         <input
           id="suivi-description"
           type="text"
@@ -201,45 +215,38 @@ function SuiviInnerForm({
           }
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="min-h-[44px] w-full rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-3.5 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
+          className={FORM_INPUT_CLASS}
         />
-        {errors.description && (
-          <p className="mt-1 text-xs text-rose-500">{errors.description}</p>
-        )}
-      </div>
+      </FormField>
 
-      <div>
-        <label
-          htmlFor="suivi-date-promise"
-          className="mb-1.5 block text-xs font-medium text-[var(--text-secondary)]"
-        >
-          Échéance promise (optionnelle)
-        </label>
+      <FormField
+        htmlFor="suivi-date-promise"
+        label="Échéance promise"
+        hint="Optionnelle"
+        error={errors.datePromise}
+      >
         <input
           id="suivi-date-promise"
           type="date"
           value={datePromise}
           onChange={(e) => setDatePromise(e.target.value)}
-          className="min-h-[44px] w-full rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-3.5 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
+          className={cn(FORM_INPUT_CLASS, "tabular-nums")}
         />
-        {errors.datePromise && (
-          <p className="mt-1 text-xs text-rose-500">{errors.datePromise}</p>
-        )}
-      </div>
+      </FormField>
 
       {/* Contact associé + création rapide */}
-      <div>
-        <div className="mb-1.5 flex items-center justify-between">
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between gap-2">
           <label
             htmlFor="suivi-contact"
-            className="text-xs font-medium text-[var(--text-secondary)]"
+            className="text-[13px] font-semibold text-[var(--foreground)]/85"
           >
             Contact associé (optionnel)
           </label>
           <button
             type="button"
             onClick={() => setShowNewContact((v) => !v)}
-            className="apple-press inline-flex items-center gap-1 text-xs font-semibold text-[var(--accent)]"
+            className="apple-press inline-flex min-h-[32px] items-center gap-1 rounded-full bg-indigo-500/10 px-2.5 text-xs font-semibold text-indigo-600 dark:text-indigo-300"
           >
             <UserPlus className="h-3.5 w-3.5" />
             {showNewContact ? "Fermer" : "Nouveau contact"}
@@ -250,7 +257,7 @@ function SuiviInnerForm({
           id="suivi-contact"
           value={contactId}
           onChange={(e) => setContactId(e.target.value)}
-          className="min-h-[44px] w-full rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-3.5 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
+          className={FORM_SELECT_CLASS}
         >
           <option value="">Aucun contact associé</option>
           {contacts.map((c) => (
@@ -267,33 +274,33 @@ function SuiviInnerForm({
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              className="mt-2.5 overflow-hidden rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-subtle)] p-3"
+              className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--muted)]/50 p-3.5"
             >
-              <p className="text-xs font-semibold text-[var(--text-primary)]">
+              <p className="text-xs font-semibold text-[var(--foreground)]">
                 Création rapide de contact
               </p>
-              <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <div className="mt-2.5 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                 <input
                   type="text"
                   placeholder="Nom complet *"
                   value={newNom}
                   onChange={(e) => setNewNom(e.target.value)}
-                  className="min-h-[40px] rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 text-xs text-[var(--text-primary)] outline-none"
+                  className={FORM_INPUT_CLASS}
                 />
                 <input
                   type="tel"
-                  placeholder="Téléphone WhatsApp (ex: +225...)"
+                  placeholder="Téléphone WhatsApp"
                   value={newTelephone}
                   onChange={(e) => setNewTelephone(e.target.value)}
-                  className="min-h-[40px] rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 text-xs text-[var(--text-primary)] outline-none"
+                  className={FORM_INPUT_CLASS}
                 />
               </div>
-              <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+              <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2">
                 <select
                   aria-label="Type de contact"
                   value={newType}
                   onChange={(e) => setNewType(e.target.value as ContactType)}
-                  className="min-h-[38px] rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-2.5 text-xs text-[var(--text-primary)] outline-none"
+                  className={cn(FORM_SELECT_CLASS, "w-auto flex-1")}
                 >
                   {CONTACT_TYPES.map((t) => (
                     <option key={t} value={t}>
@@ -305,48 +312,39 @@ function SuiviInnerForm({
                   type="button"
                   disabled={createContact.isPending}
                   onClick={() => void handleQuickCreateContact()}
-                  className="apple-press min-h-[38px] rounded-xl bg-[var(--accent)] px-3.5 text-xs font-semibold text-white disabled:opacity-50"
+                  className="apple-press min-h-[48px] rounded-2xl bg-indigo-600 px-4 text-sm font-semibold text-white shadow-sm disabled:opacity-50"
                 >
                   {createContact.isPending ? "Création..." : "Créer & sélectionner"}
                 </button>
               </div>
               {contactError && (
-                <p className="mt-1.5 text-xs text-rose-500">{contactError}</p>
+                <p className="mt-2 text-xs font-medium text-rose-500">
+                  {contactError}
+                </p>
               )}
             </motion.div>
           )}
         </AnimatePresence>
       </div>
 
-      <div className="flex items-center justify-end gap-2.5 pt-2">
-        <button
-          type="button"
-          onClick={onClose}
-          disabled={isPending}
-          className="apple-press min-h-[44px] rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-4 text-sm font-medium text-[var(--text-primary)]"
-        >
-          Annuler
-        </button>
-        <button
-          type="submit"
-          disabled={isPending}
-          className="apple-press min-h-[44px] rounded-xl bg-[var(--accent)] px-5 text-sm font-semibold text-white shadow-sm disabled:opacity-50"
-        >
-          {isPending
-            ? "Enregistrement..."
-            : isEditing
-              ? "Mettre à jour"
-              : kind === "dette"
-                ? "Créer la dette"
-                : "Créer la créance"}
-        </button>
-      </div>
+      <FormActions
+        submitLabel={
+          isEditing
+            ? "Mettre à jour"
+            : kind === "dette"
+              ? "Créer la dette"
+              : "Créer la créance"
+        }
+        isPending={isPending}
+        accent={kind === "dette" ? "amber" : "indigo"}
+        onCancel={onClose}
+      />
     </form>
   );
 }
 
 /**
- * Modale Apple-style pour créer ou modifier une dette ou une créance,
+ * Modale mobile-first pour créer ou modifier une dette ou une créance,
  * incluant la création rapide d'un contact associé.
  */
 export function SuiviFormModal({
@@ -361,65 +359,43 @@ export function SuiviFormModal({
   const isDette = kind === "dette";
 
   return (
-    <AnimatePresence>
-      {open && (
-        <div
-          className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="suivi-modal-title"
-        >
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
-            onClick={isPending ? undefined : onClose}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm"
-          />
-
-          <motion.div
-            initial={{ opacity: 0, y: 28, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 18, scale: 0.97 }}
-            transition={{ type: "spring", stiffness: 380, damping: 30 }}
-            className="apple-surface relative z-10 max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl p-6 shadow-2xl sm:rounded-3xl"
-          >
-            <div className="flex items-center justify-between">
-              <h2
-                id="suivi-modal-title"
-                className="text-lg font-semibold text-[var(--text-primary)]"
-              >
-                {isEditing
-                  ? isDette
-                    ? "Modifier la dette"
-                    : "Modifier la créance"
-                  : isDette
-                    ? "Nouvelle dette"
-                    : "Nouvelle créance"}
-              </h2>
-              <button
-                type="button"
-                onClick={onClose}
-                disabled={isPending}
-                aria-label="Fermer"
-                className="apple-press flex h-9 w-9 items-center justify-center rounded-full text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)]"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-
-            <SuiviInnerForm
-              key={initialData?.id ?? `new-${kind}`}
-              kind={kind}
-              initialData={initialData}
-              isPending={isPending}
-              onClose={onClose}
-              onSubmit={onSubmit}
-            />
-          </motion.div>
-        </div>
-      )}
-    </AnimatePresence>
+    <FormSheet
+      open={open}
+      titleId="suivi-modal-title"
+      title={
+        isEditing
+          ? isDette
+            ? "Modifier la dette"
+            : "Modifier la créance"
+          : isDette
+            ? "Nouvelle dette"
+            : "Nouvelle créance"
+      }
+      subtitle={
+        isDette
+          ? "Suivez un engagement à rembourser et son échéance"
+          : "Suivez un montant à encaisser et ses relances"
+      }
+      icon={
+        isDette ? (
+          <Receipt className="h-5 w-5" />
+        ) : (
+          <HandCoins className="h-5 w-5" />
+        )
+      }
+      accent={isDette ? "amber" : "indigo"}
+      size="lg"
+      isPending={isPending}
+      onClose={onClose}
+    >
+      <SuiviInnerForm
+        key={initialData?.id ?? `new-${kind}`}
+        kind={kind}
+        initialData={initialData}
+        isPending={isPending}
+        onClose={onClose}
+        onSubmit={onSubmit}
+      />
+    </FormSheet>
   );
 }
