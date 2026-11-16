@@ -770,7 +770,10 @@ export const IaCopilotModal: React.FC<IaCopilotModalProps> = ({
                     <BrainCircuit className="h-6 w-6" />
                   </div>
                   <h3 className="text-xl font-semibold tracking-tight text-[var(--foreground)] sm:text-2xl">
-                    {t("ia.emptyTitle")}
+                    {t("ia.emptyTitle").replace(
+                      /Ndimbeul Bot/gi,
+                      statusQuery.data?.aiName ?? aiName,
+                    )}
                   </h3>
                   <p className="mt-2 max-w-md text-xs leading-relaxed text-[var(--muted-foreground)] sm:text-sm">
                     {t("ia.emptyDesc")}

@@ -19,7 +19,8 @@ export function useAiName(): string {
   const { data } = useQuery({
     queryKey: iaKeys.config(),
     queryFn: iaApi.getConfig,
-    staleTime: 60_000,
+    staleTime: 10_000,
+    refetchOnMount: "always",
   });
   return data?.aiName?.trim() || "Ndimbeul Bot";
 }
