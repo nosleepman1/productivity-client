@@ -200,7 +200,7 @@ export const ForgotPasswordStep: React.FC<ForgotPasswordStepProps> = ({
 
           <Button
             type="submit"
-            disabled={loading || code.trim().length < 4}
+            disabled={loading || code.trim().length !== 6}
             className="apple-press h-11 w-full rounded-xl text-sm font-semibold"
           >
             {loading ? (
