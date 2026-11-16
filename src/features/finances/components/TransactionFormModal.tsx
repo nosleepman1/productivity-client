@@ -1,11 +1,25 @@
 import { useState, type FormEvent } from "react";
-import { X } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { ArrowDownLeft, ArrowUpRight } from "lucide-react";
+import {
+  FORM_INPUT_CLASS,
+  FORM_SELECT_CLASS,
+  FormActions,
+  FormField,
+  FormSheet,
+} from "@/components/ui/FormSheet";
+import { useActiveEspace } from "@/features/espaces/hooks/useEspaces";
+import {
+  CATEGORIES_DEPENSES,
+  CATEGORIES_REVENUS,
+  MOYENS_PAIEMENT,
+} from "@/features/finances/hooks/useFinancesResume";
 import {
   toTransactionDto,
   transactionFormSchema,
 } from "@/features/finances/schemas/transaction.schema";
 import { toDateInputValue } from "@/features/finances/utils/format";
+import { useProjets } from "@/features/productivity/hooks/useProjets";
+import { cn } from "@/lib/utils";
 import type {
   CreateDepenseDto,
   CreateRevenuDto,
@@ -44,6 +58,12 @@ function TransactionInnerForm({
   onClose,
   onSubmit,
 }: InnerFormProps) {
+  const isRevenu = kind === "revenu";
+  const isEditing = Boolean(initialData);
+  const { activeEspaceId } = useActiveEspace();
+  const projetsQuery = useProjets(activeEspaceId, { page: 1, limit: 50 });
+  const projets = projetsQuery.data?.data ?? [];
+
   const [montant, setMontant] = useState(
     initialData ? String(initialData.montant) : "",
   );
@@ -51,12 +71,20 @@ function TransactionInnerForm({
     initialData?.description ?? "",
   );
   const [date, setDate] = useState(
-    initialData ? toDateInputValue(initialData.date) : toDateInputValue(new Date().toISOString()),
+    initialData
+      ? toDateInputValue(initialData.date)
+      : toDateInputValue(new Date().toISOString()),
   );
+  const [categorie, setCategorie] = useState(
+    initialData?.categorie ?? (isRevenu ? "SALAIRE" : "ALIMENTATION"),
+  );
+  const [moyenPaiement, setMoyenPaiement] = useState(
+    initialData?.moyenPaiement ?? "WAVE",
+  );
+  const [projetId, setProjetId] = useState(initialData?.projetId ?? "");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const isRevenu = kind === "revenu";
-  const isEditing = Boolean(initialData);
+  const categories = isRevenu ? CATEGORIES_REVENUS : CATEGORIES_DEPENSES;
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -65,6 +93,9 @@ function TransactionInnerForm({
       montant: montant.trim() === "" ? NaN : parsedNumber,
       description,
       date,
+      categorie,
+      moyenPaiement,
+      projetId: projetId || null,
     });
 
     if (!result.success) {
@@ -82,38 +113,41 @@ function TransactionInnerForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="mt-5 space-y-4">
-      <div>
-        <label
-          htmlFor="tx-montant"
-          className="mb-1.5 block text-xs font-medium text-[var(--text-secondary)]"
-        >
-          Montant (FCFA)
-        </label>
-        <input
-          id="tx-montant"
-          type="number"
-          inputMode="numeric"
-          min={1}
-          step={1}
-          placeholder="Ex : 25000"
-          value={montant}
-          onChange={(e) => setMontant(e.target.value)}
-          className="min-h-[44px] w-full rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-3.5 text-base font-semibold tabular-nums text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
-          autoFocus
-        />
-        {errors.montant && (
-          <p className="mt-1 text-xs text-rose-500">{errors.montant}</p>
-        )}
-      </div>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <FormField
+        htmlFor="tx-montant"
+        label="Montant"
+        hint="FCFA"
+        required
+        error={errors.montant}
+      >
+        <div className="relative">
+          <input
+            id="tx-montant"
+            type="number"
+            inputMode="numeric"
+            min={1}
+            step={1}
+            placeholder="25 000"
+            value={montant}
+            onChange={(e) => setMontant(e.target.value)}
+            className={cn(
+              FORM_INPUT_CLASS,
+              "pr-16 text-lg font-bold tabular-nums",
+            )}
+          />
+          <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-xs font-bold tracking-wider text-[var(--muted-foreground)]">
+            FCFA
+          </span>
+        </div>
+      </FormField>
 
-      <div>
-        <label
-          htmlFor="tx-description"
-          className="mb-1.5 block text-xs font-medium text-[var(--text-secondary)]"
-        >
-          Description
-        </label>
+      <FormField
+        htmlFor="tx-description"
+        label="Description"
+        required
+        error={errors.description}
+      >
         <input
           id="tx-description"
           type="text"
@@ -125,61 +159,87 @@ function TransactionInnerForm({
           }
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="min-h-[44px] w-full rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-3.5 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
+          className={FORM_INPUT_CLASS}
         />
-        {errors.description && (
-          <p className="mt-1 text-xs text-rose-500">{errors.description}</p>
-        )}
+      </FormField>
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <FormField htmlFor="tx-categorie" label="Catégorie">
+          <select
+            id="tx-categorie"
+            value={categorie}
+            onChange={(e) => setCategorie(e.target.value)}
+            className={FORM_SELECT_CLASS}
+          >
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.label}
+              </option>
+            ))}
+          </select>
+        </FormField>
+
+        <FormField htmlFor="tx-moyen" label="Moyen de paiement">
+          <select
+            id="tx-moyen"
+            value={moyenPaiement}
+            onChange={(e) => setMoyenPaiement(e.target.value)}
+            className={FORM_SELECT_CLASS}
+          >
+            {MOYENS_PAIEMENT.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.label}
+              </option>
+            ))}
+          </select>
+        </FormField>
       </div>
 
-      <div>
-        <label
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <FormField
           htmlFor="tx-date"
-          className="mb-1.5 block text-xs font-medium text-[var(--text-secondary)]"
+          label="Date de l'opération"
+          required
+          error={errors.date}
         >
-          Date
-        </label>
-        <input
-          id="tx-date"
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          className="min-h-[44px] w-full rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-3.5 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
-        />
-        {errors.date && (
-          <p className="mt-1 text-xs text-rose-500">{errors.date}</p>
-        )}
+          <input
+            id="tx-date"
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className={cn(FORM_INPUT_CLASS, "tabular-nums")}
+          />
+        </FormField>
+
+        <FormField htmlFor="tx-projet" label="Projet lié" hint="Optionnel">
+          <select
+            id="tx-projet"
+            value={projetId}
+            onChange={(e) => setProjetId(e.target.value)}
+            className={FORM_SELECT_CLASS}
+          >
+            <option value="">Aucun projet</option>
+            {projets.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.titre}
+              </option>
+            ))}
+          </select>
+        </FormField>
       </div>
 
-      <div className="flex items-center justify-end gap-2.5 pt-2">
-        <button
-          type="button"
-          onClick={onClose}
-          disabled={isPending}
-          className="apple-press min-h-[44px] rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-4 text-sm font-medium text-[var(--text-primary)]"
-        >
-          Annuler
-        </button>
-        <button
-          type="submit"
-          disabled={isPending}
-          className="apple-press min-h-[44px] rounded-xl bg-[var(--accent)] px-5 text-sm font-semibold text-white shadow-sm disabled:opacity-50"
-        >
-          {isPending
-            ? "Enregistrement..."
-            : isEditing
-              ? "Mettre à jour"
-              : isRevenu
-                ? "Ajouter le revenu"
-                : "Ajouter la dépense"}
-        </button>
-      </div>
+      <FormActions
+        submitLabel={isEditing ? "Enregistrer" : "Ajouter"}
+        isPending={isPending}
+        accent={isRevenu ? "emerald" : "rose"}
+        onCancel={onClose}
+      />
     </form>
   );
 }
 
 /**
- * Modale Apple-style pour créer ou modifier un revenu ou une dépense avec validation Zod.
+ * Modale mobile-first pour créer ou modifier un revenu ou une dépense avec validation Zod.
  */
 export function TransactionFormModal({
   open,
@@ -192,66 +252,43 @@ export function TransactionFormModal({
   const isRevenu = kind === "revenu";
   const isEditing = Boolean(initialData);
 
+  const title = isEditing
+    ? isRevenu
+      ? "Modifier le revenu"
+      : "Modifier la dépense"
+    : isRevenu
+      ? "Nouveau revenu"
+      : "Nouvelle dépense";
+
   return (
-    <AnimatePresence>
-      {open && (
-        <div
-          className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="tx-modal-title"
-        >
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
-            onClick={isPending ? undefined : onClose}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm"
-          />
-
-          <motion.div
-            initial={{ opacity: 0, y: 28, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 18, scale: 0.97 }}
-            transition={{ type: "spring", stiffness: 380, damping: 30 }}
-            className="apple-surface relative z-10 w-full max-w-md rounded-t-3xl p-6 shadow-2xl sm:rounded-3xl"
-          >
-            <div className="flex items-center justify-between">
-              <h2
-                id="tx-modal-title"
-                className="text-lg font-semibold text-[var(--text-primary)]"
-              >
-                {isEditing
-                  ? isRevenu
-                    ? "Modifier le revenu"
-                    : "Modifier la dépense"
-                  : isRevenu
-                    ? "Nouveau revenu"
-                    : "Nouvelle dépense"}
-              </h2>
-              <button
-                type="button"
-                onClick={onClose}
-                disabled={isPending}
-                aria-label="Fermer"
-                className="apple-press flex h-9 w-9 items-center justify-center rounded-full text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)]"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-
-            <TransactionInnerForm
-              key={initialData?.id ?? `new-${kind}`}
-              kind={kind}
-              initialData={initialData}
-              isPending={isPending}
-              onClose={onClose}
-              onSubmit={onSubmit}
-            />
-          </motion.div>
-        </div>
-      )}
-    </AnimatePresence>
+    <FormSheet
+      open={open}
+      titleId="tx-modal-title"
+      title={title}
+      subtitle={
+        isRevenu
+          ? "Enregistrez une entrée d'argent dans votre espace"
+          : "Suivez une sortie d'argent dans votre espace"
+      }
+      icon={
+        isRevenu ? (
+          <ArrowDownLeft className="h-5 w-5" />
+        ) : (
+          <ArrowUpRight className="h-5 w-5" />
+        )
+      }
+      accent={isRevenu ? "emerald" : "rose"}
+      isPending={isPending}
+      onClose={onClose}
+    >
+      <TransactionInnerForm
+        key={initialData?.id ?? `new-${kind}`}
+        kind={kind}
+        initialData={initialData}
+        isPending={isPending}
+        onClose={onClose}
+        onSubmit={onSubmit}
+      />
+    </FormSheet>
   );
 }
