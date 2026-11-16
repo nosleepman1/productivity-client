@@ -345,13 +345,13 @@ export const en = {
     saved: "Saved!",
   },
   ia: {
-    title: "Salma",
+    title: "Ndimbeul Bot",
     subtitle: "Analyses your data and acts on your workspace",
     manualAdd: "Manual add",
     newChat: "New chat",
     history: "History",
     noHistory: "No saved conversations yet",
-    emptyTitle: "Ask Salma anything",
+    emptyTitle: "Ask Ndimbeul Bot anything",
     emptyDesc:
       "I inspect your finances, tasks, projects, habits, and notes in real time to answer or prepare actions.",
     placeholder: "E.g. How much did I spend on transport? or Add 3000 FCFA taxi Wave...",

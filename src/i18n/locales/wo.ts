@@ -345,13 +345,13 @@ export const wo = {
     saved: "Denc na !",
   },
   ia: {
-    title: "Salma",
+    title: "Ndimbeul Bot",
     subtitle: "Mi ngi seet say xaalis te di la jàppale ci sa bérab",
     manualAdd: "Yokk ci loxo",
     newChat: "Waxtaan bu bees",
     history: "Li weesu",
     noHistory: "Amul benn waxtaan boo denc fii mu nekk",
-    emptyTitle: "Laajal Salma walla nga joxe ndigal",
+    emptyTitle: "Laajal Ndimbeul Bot walla nga joxe ndigal",
     emptyDesc:
       "Maa ngi xool sa xaalis, say liggéey, say poroze, say jëf ak say bind ci saa si ngir tontu la walla waajal liggéey.",
     placeholder: "Misaal : Ñaata laa génne ci transport ? walla Bindal 3000 FCFA taxi Wave...",
