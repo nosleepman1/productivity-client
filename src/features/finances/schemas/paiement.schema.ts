@@ -7,7 +7,11 @@ import type { CreatePaiementDto } from "@/types/finances";
  * @param maxMontant - Solde restant maximal autorisé en FCFA.
  * @returns Schéma Zod adapté au dossier sélectionné.
  */
-export function buildPaiementFormSchema(maxMontant?: number) {
+export function buildPaiementFormSchema(
+  maxMontant?: number,
+  minDate?: string,
+  maxDate?: string,
+) {
   return z.object({
     montant: z
       .number({ message: "Veuillez saisir un montant valide" })
@@ -22,9 +26,15 @@ export function buildPaiementFormSchema(maxMontant?: number) {
     date: z
       .string()
       .trim()
-      .regex(/^\d{4}-\d{2}-\d{2}$/, "Format de date invalide (AAAA-MM-JJ)")
-      .optional()
-      .or(z.literal("")),
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "La date du paiement est requise (AAAA-MM-JJ)")
+      .refine(
+        (val) => !minDate || val >= minDate,
+        "La date du paiement ne peut pas être antérieure à la date d'origine",
+      )
+      .refine(
+        (val) => !maxDate || val <= maxDate,
+        "La date du paiement ne peut pas être dans le futur",
+      ),
     note: z
       .string()
       .trim()

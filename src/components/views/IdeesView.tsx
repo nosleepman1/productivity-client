@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
-import { Plus, Sparkles } from "lucide-react";
+import { Lightbulb, Plus } from "lucide-react";
 import { MotionConfig } from "motion/react";
+import { useTranslation } from "react-i18next";
 import { useActiveEspace } from "@/features/espaces/hooks/useEspaces";
 import { DeleteConfirmDialog } from "@/features/finances/components/DeleteConfirmDialog";
 import { NoteFormModal } from "@/features/productivity/components/NoteFormModal";
@@ -16,10 +17,19 @@ import {
 import type { CreateNoteDto, Note } from "@/types/productivity";
 
 /**
+ * Propriétés de la vue Notes & Idées.
+ */
+export interface IdeesViewProps {
+  /** Masque l'en-tête principal lorsque la vue est intégrée dans l'univers Projets. */
+  embedded?: boolean;
+}
+
+/**
  * Vue Notes & Idées connectée à l'API NestJS (`/espaces/:espaceId/notes`),
  * avec lecture plein écran, édition Zod, recherche et pagination.
  */
-export function IdeesView() {
+export function IdeesView({ embedded = false }: IdeesViewProps = {}) {
+  const { t } = useTranslation();
   const { activeEspace, activeEspaceId } = useActiveEspace();
 
   const [page, setPage] = useState(1);
@@ -77,27 +87,39 @@ export function IdeesView() {
 
   return (
     <MotionConfig reducedMotion="user">
-      <div className="space-y-6 pb-24">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-[var(--accent)]/10 px-2.5 py-0.5 text-xs font-semibold text-[var(--accent)]">
-              <Sparkles className="h-3 w-3" />
-              {activeEspace?.nom ?? "Espace actif"}
+      <div className={embedded ? "space-y-5" : "space-y-6 pb-10"}>
+        <div className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-xs sm:p-5">
+          <div className="flex flex-col gap-3.5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 items-center gap-3.5">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-500/12 text-amber-600 dark:bg-amber-500/20 dark:text-amber-300">
+                <Lightbulb className="h-6 w-6" />
+              </div>
+              <div className="min-w-0">
+                <div className="inline-flex items-center gap-1.5 rounded-full bg-[var(--muted)] px-2.5 py-0.5 text-[11px] font-semibold text-[var(--muted-foreground)]">
+                  <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                  <span className="truncate">
+                    {activeEspace?.nom ?? t("common.activeSpace")}
+                  </span>
+                </div>
+                <h1 className="mt-1 truncate text-xl font-bold tracking-tight text-[var(--foreground)] sm:text-2xl">
+                  {t("idees.title")}
+                </h1>
+                <p className="truncate text-xs text-[var(--muted-foreground)]">
+                  {t("idees.subtitle")}
+                </p>
+              </div>
             </div>
-            <h1 className="mt-1.5 text-2xl font-bold tracking-tight text-[var(--text-primary)]">
-              Notes & Idées
-            </h1>
-          </div>
 
-          <button
-            type="button"
-            disabled={!activeEspaceId}
-            onClick={() => setFormModal({ open: true, item: null })}
-            className="apple-press inline-flex min-h-[44px] items-center justify-center gap-2 rounded-2xl bg-[var(--accent)] px-4 text-sm font-semibold text-white shadow-sm disabled:opacity-50"
-          >
-            <Plus className="h-4 w-4" />
-            Nouvelle note
-          </button>
+            <button
+              type="button"
+              disabled={!activeEspaceId}
+              onClick={() => setFormModal({ open: true, item: null })}
+              className="apple-press inline-flex min-h-[44px] items-center justify-center gap-2 rounded-2xl bg-amber-600 px-4 text-sm font-semibold text-white shadow-md shadow-amber-500/25 hover:bg-amber-500 disabled:opacity-50"
+            >
+              <Plus className="h-4 w-4" />
+              {t("idees.newNote")}
+            </button>
+          </div>
         </div>
 
         <ProductivityFiltersBar
@@ -105,9 +127,9 @@ export function IdeesView() {
           onSearchChange={setSearch}
           tri={tri}
           sortOptions={[
-            { value: "updatedAt", label: "Dernière modification" },
-            { value: "createdAt", label: "Date de création" },
-            { value: "titre", label: "Titre" },
+            { value: "updatedAt", label: t("idees.sortUpdated") },
+            { value: "createdAt", label: t("idees.sortCreated") },
+            { value: "titre", label: t("idees.sortTitle") },
           ]}
           onTriChange={(val) => {
             setTri(val as "updatedAt" | "createdAt" | "titre");

@@ -1,5 +1,6 @@
 import { FolderKanban, Plus } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
+import { useTranslation } from "react-i18next";
 import type { Projet } from "@/types/productivity";
 import { ProductivityListSkeleton } from "./ProductivitySkeletons";
 import { ProjetCard } from "./ProjetCard";
@@ -31,6 +32,7 @@ export function ProjetList({
   onEdit,
   onDelete,
 }: ProjetListProps) {
+  const { t } = useTranslation();
   if (isLoading) {
     return <ProductivityListSkeleton count={3} />;
   }
@@ -46,11 +48,10 @@ export function ProjetList({
           <FolderKanban className="h-6 w-6" />
         </div>
         <h3 className="mt-4 text-base font-semibold text-[var(--text-primary)]">
-          Aucun projet trouvé
+          {t("projetsExtra.empty.noProjectTitle")}
         </h3>
         <p className="mt-1 max-w-sm text-sm text-[var(--text-secondary)]">
-          Structurez vos objectifs dans cet espace en créant votre premier
-          projet avec date de début et échéance.
+          {t("projetsExtra.empty.noProjectDesc")}
         </p>
         <button
           type="button"
@@ -58,7 +59,7 @@ export function ProjetList({
           className="apple-press mt-5 inline-flex min-h-[44px] items-center gap-2 rounded-xl bg-[var(--accent)] px-4 text-sm font-semibold text-white shadow-sm"
         >
           <Plus className="h-4 w-4" />
-          Nouveau projet
+          {t("projets.newProject")}
         </button>
       </motion.div>
     );

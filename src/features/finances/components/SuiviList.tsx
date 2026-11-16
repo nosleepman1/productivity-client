@@ -1,5 +1,6 @@
 import { HandCoins, Plus } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
+import { useTranslation } from "react-i18next";
 import type { Creance, Dette } from "@/types/finances";
 import { FinanceListSkeleton } from "./FinanceSkeletons";
 import { SuiviCard } from "./SuiviCard";
@@ -37,6 +38,7 @@ export function SuiviList({
   onEdit,
   onDelete,
 }: SuiviListProps) {
+  const { t } = useTranslation();
   if (isLoading) {
     return <FinanceListSkeleton count={3} />;
   }
@@ -53,12 +55,14 @@ export function SuiviList({
           <HandCoins className="h-6 w-6" />
         </div>
         <h3 className="mt-4 text-base font-semibold text-[var(--text-primary)]">
-          Aucune {isDette ? "dette" : "créance"} enregistrée
+          {isDette
+            ? t("financesExtra.empty.noDebt")
+            : t("financesExtra.empty.noReceivable")}
         </h3>
         <p className="mt-1 max-w-sm text-sm text-[var(--text-secondary)]">
           {isDette
-            ? "Suivez vos engagements à rembourser, échéances promises et paiements partiels."
-            : "Suivez l'argent que l'on vous doit, encaissez par tranches et relancez via WhatsApp."}
+            ? t("financesExtra.empty.noDebtDesc")
+            : t("financesExtra.empty.noReceivableDesc")}
         </p>
         <button
           type="button"
@@ -66,7 +70,9 @@ export function SuiviList({
           className="apple-press mt-5 inline-flex min-h-[44px] items-center gap-2 rounded-xl bg-[var(--accent)] px-4 text-sm font-semibold text-white shadow-sm"
         >
           <Plus className="h-4 w-4" />
-          Nouvelle {isDette ? "dette" : "créance"}
+          {isDette
+            ? t("financesExtra.empty.newDebt")
+            : t("financesExtra.empty.newReceivable")}
         </button>
       </motion.div>
     );

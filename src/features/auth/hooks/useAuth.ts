@@ -114,11 +114,33 @@ export function useBootstrapAuth() {
         if (!active) return;
         setAccessToken(tokens.accessToken);
 
+        // Hydratation immédiate depuis le dernier profil connu pour débloquer l'UI en 1 aller-retour
+        try {
+          const cached = localStorage.getItem("productivity-cached-user");
+          if (cached) {
+            setAuth(tokens.accessToken, JSON.parse(cached));
+            setBootstrapping(false);
+          }
+        } catch {
+          // Ignore corrupted cache
+        }
+
         const user = await authService.getMe();
         if (!active) return;
+        try {
+          localStorage.setItem("productivity-cached-user", JSON.stringify(user));
+        } catch {
+          // Ignore quota error
+        }
         setAuth(tokens.accessToken, user);
       } catch {
         if (active) {
+          try {
+            localStorage.removeItem("productivity-cached-user");
+            localStorage.removeItem("productivity-rq-cache");
+          } catch {
+            // Ignore
+          }
           clearAuth();
         }
       } finally {

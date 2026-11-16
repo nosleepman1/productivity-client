@@ -1,4 +1,5 @@
 import { motion } from "motion/react";
+import { useTranslation } from "react-i18next";
 import { formatFcfa } from "@/features/finances/utils/format";
 
 /** Propriétés du graphique de flux financiers. */
@@ -23,6 +24,7 @@ export function CashFlowChart({
   totalCreancesRestant,
   totalDettesRestant,
 }: CashFlowChartProps) {
+  const { t } = useTranslation();
   const maxFlow = Math.max(totalRevenus, totalDepenses, 1);
   const revWidth = Math.round((totalRevenus / maxFlow) * 100);
   const depWidth = Math.round((totalDepenses / maxFlow) * 100);
@@ -46,7 +48,7 @@ export function CashFlowChart({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: "spring", stiffness: 340, damping: 28, delay: 0.12 }}
-      aria-label="Synthèse visuelle des flux"
+      aria-label={t("financesExtra.chart.ariaLabel")}
       className="apple-surface grid grid-cols-1 gap-5 rounded-3xl p-5 md:grid-cols-[auto_1fr]"
     >
       {/* Anneau SVG animé du taux d'épargne */}
@@ -84,24 +86,24 @@ export function CashFlowChart({
               {savingsRate}%
             </span>
             <span className="text-[10px] font-medium text-[var(--text-secondary)]">
-              Épargne
+              {t("financesExtra.chart.savings")}
             </span>
           </div>
         </div>
 
         <div className="min-w-0">
           <p className="text-xs font-medium uppercase tracking-wider text-[var(--text-secondary)]">
-            Ratio de trésorerie
+            {t("financesExtra.chart.cashflowRatio")}
           </p>
           <p className="mt-1 text-sm font-semibold text-[var(--text-primary)]">
             {savingsRate >= 20
-              ? "Équilibre sain"
+              ? t("financesExtra.chart.healthyBalance")
               : savingsRate >= 0
-                ? "Marge modérée"
-                : "Dépenses supérieures"}
+                ? t("financesExtra.chart.moderateMargin")
+                : t("financesExtra.chart.expensesHigher")}
           </p>
           <p className="mt-0.5 text-xs text-[var(--text-secondary)]">
-            Part des revenus conservée après dépenses
+            {t("financesExtra.chart.savingsDesc")}
           </p>
         </div>
       </div>
@@ -112,7 +114,7 @@ export function CashFlowChart({
           <div>
             <div className="mb-1 flex items-center justify-between text-xs">
               <span className="font-medium text-[var(--text-secondary)]">
-                Revenus
+                {t("dashboard.revenues")}
               </span>
               <span className="font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
                 {formatFcfa(totalRevenus)}
@@ -131,7 +133,7 @@ export function CashFlowChart({
           <div>
             <div className="mb-1 flex items-center justify-between text-xs">
               <span className="font-medium text-[var(--text-secondary)]">
-                Dépenses
+                {t("dashboard.expenses")}
               </span>
               <span className="font-semibold tabular-nums text-rose-600 dark:text-rose-400">
                 {formatFcfa(totalDepenses)}
@@ -152,7 +154,7 @@ export function CashFlowChart({
           <div>
             <div className="mb-1 flex items-center justify-between text-xs">
               <span className="font-medium text-[var(--text-secondary)]">
-                Créances à recevoir
+                {t("financesExtra.chart.receivablesToCollect")}
               </span>
               <span className="font-semibold tabular-nums text-sky-600 dark:text-sky-400">
                 {formatFcfa(totalCreancesRestant)}
@@ -171,7 +173,7 @@ export function CashFlowChart({
           <div>
             <div className="mb-1 flex items-center justify-between text-xs">
               <span className="font-medium text-[var(--text-secondary)]">
-                Dettes à rembourser
+                {t("financesExtra.chart.debtsToRepay")}
               </span>
               <span className="font-semibold tabular-nums text-amber-600 dark:text-amber-400">
                 {formatFcfa(totalDettesRestant)}

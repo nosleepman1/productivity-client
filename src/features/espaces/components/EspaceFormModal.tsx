@@ -1,22 +1,23 @@
 import React, { useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Layers } from "lucide-react";
+import { extractApiError } from "@/api/api";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+  FORM_INPUT_CLASS,
+  FORM_TEXTAREA_CLASS,
+  FormActions,
+  FormField,
+  FormSheet,
+} from "@/components/ui/FormSheet";
 import { useCreateEspaceMutation } from "@/features/espaces/hooks/useEspaces";
 import { createEspaceSchema } from "@/features/espaces/schemas/espace.schema";
-import { extractApiError } from "@/api/api";
+import { cn } from "@/lib/utils";
 import type { EspaceType } from "@/types/espaces";
 
-interface EspaceFormModalProps {
+/** Propriétés de la modale de création d'un espace de travail. */
+export interface EspaceFormModalProps {
+  /** Contrôle l'ouverture de la modale. */
   open: boolean;
+  /** Met à jour l'état d'ouverture. */
   onOpenChange: (open: boolean) => void;
 }
 
@@ -35,6 +36,9 @@ const TYPE_OPTIONS: Array<{ value: EspaceType; label: string }> = [
   { value: "OTHER", label: "Autre" },
 ];
 
+/**
+ * Modale mobile-first pour créer un nouvel espace de travail isolé.
+ */
 export const EspaceFormModal: React.FC<EspaceFormModalProps> = ({
   open,
   onOpenChange,
@@ -52,6 +56,11 @@ export const EspaceFormModal: React.FC<EspaceFormModalProps> = ({
     setCouleur(ACCENT_COLORS[0]);
     setDescription("");
     setError(null);
+  };
+
+  const handleClose = () => {
+    resetForm();
+    onOpenChange(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -72,8 +81,7 @@ export const EspaceFormModal: React.FC<EspaceFormModalProps> = ({
 
     try {
       await createMutation.mutateAsync(parsed.data);
-      resetForm();
-      onOpenChange(false);
+      handleClose();
     } catch (err) {
       const apiErr = extractApiError(err);
       setError(
@@ -83,123 +91,101 @@ export const EspaceFormModal: React.FC<EspaceFormModalProps> = ({
   };
 
   return (
-    <Dialog
+    <FormSheet
       open={open}
-      onOpenChange={(next) => {
-        if (!next) resetForm();
-        onOpenChange(next);
-      }}
+      titleId="espace-modal-title"
+      title="Nouvel espace de travail"
+      subtitle="Chaque espace isole ses projets, tâches, notes et finances"
+      icon={<Layers className="h-5 w-5" />}
+      accent="indigo"
+      isPending={createMutation.isPending}
+      onClose={handleClose}
     >
-      <DialogContent className="sm:max-w-[420px] rounded-3xl">
-        <DialogHeader>
-          <DialogTitle className="text-base font-semibold">
-            Nouvel espace de travail
-          </DialogTitle>
-          <DialogDescription className="text-xs">
-            Chaque espace isole strictement ses projets, tâches, notes et finances.
-          </DialogDescription>
-        </DialogHeader>
+      <form noValidate onSubmit={handleSubmit} className="space-y-4">
+        <FormField
+          htmlFor="espace-nom"
+          label="Nom de l'espace"
+          required
+        >
+          <input
+            id="espace-nom"
+            required
+            placeholder="Ex : Studio Design, Freelance..."
+            value={nom}
+            onChange={(e) => setNom(e.target.value)}
+            className={FORM_INPUT_CLASS}
+          />
+        </FormField>
 
-        <form noValidate onSubmit={handleSubmit} className="space-y-4 pt-1">
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-foreground block">
-              Nom de l&apos;espace
-            </label>
-            <Input
-              required
-              placeholder="ex: Studio Design, Freelance..."
-              value={nom}
-              onChange={(e) => setNom(e.target.value)}
-              className="h-11 rounded-xl"
-            />
+        <FormField label="Type d'espace">
+          <div className="grid grid-cols-3 gap-1.5 rounded-2xl border border-[var(--border)] bg-[var(--background)] p-1.5">
+            {TYPE_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setType(opt.value)}
+                className={cn(
+                  "apple-press min-h-[40px] rounded-xl text-xs font-semibold transition-colors",
+                  type === opt.value
+                    ? "bg-[var(--card)] text-[var(--foreground)] shadow-sm ring-1 ring-[var(--border)]"
+                    : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]",
+                )}
+              >
+                {opt.label}
+              </button>
+            ))}
           </div>
+        </FormField>
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-foreground block">
-              Type
-            </label>
-            <div className="grid grid-cols-3 rounded-xl bg-muted p-1">
-              {TYPE_OPTIONS.map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => setType(opt.value)}
-                  className={`apple-press h-8 rounded-lg text-xs font-medium ${
-                    type === opt.value
-                      ? "bg-card text-foreground shadow-xs"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
+        <FormField label="Couleur repère">
+          <div className="flex flex-wrap items-center gap-3 pt-0.5">
+            {ACCENT_COLORS.map((hex) => (
+              <button
+                key={hex}
+                type="button"
+                onClick={() => setCouleur(hex)}
+                aria-label={`Couleur ${hex}`}
+                className={cn(
+                  "apple-press h-9 w-9 rounded-full transition-transform",
+                  couleur === hex
+                    ? "scale-110 ring-2 ring-[var(--foreground)] ring-offset-2 ring-offset-[var(--card)]"
+                    : "opacity-80 hover:opacity-100",
+                )}
+                style={{ backgroundColor: hex }}
+              />
+            ))}
           </div>
+        </FormField>
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-foreground block">
-              Couleur repère
-            </label>
-            <div className="flex items-center gap-2.5">
-              {ACCENT_COLORS.map((hex) => (
-                <button
-                  key={hex}
-                  type="button"
-                  onClick={() => setCouleur(hex)}
-                  aria-label={`Couleur ${hex}`}
-                  className={`apple-press h-8 w-8 rounded-full transition-transform ${
-                    couleur === hex
-                      ? "ring-2 ring-foreground ring-offset-2 ring-offset-card scale-105"
-                      : "opacity-80 hover:opacity-100"
-                  }`}
-                  style={{ backgroundColor: hex }}
-                />
-              ))}
-            </div>
-          </div>
+        <FormField
+          htmlFor="espace-desc"
+          label="Description"
+          hint="Optionnelle"
+        >
+          <textarea
+            id="espace-desc"
+            rows={2}
+            placeholder="Contexte ou objectif de cet espace..."
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className={cn(FORM_TEXTAREA_CLASS, "resize-none")}
+          />
+        </FormField>
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-foreground block">
-              Description (optionnel)
-            </label>
-            <Textarea
-              rows={2}
-              placeholder="Contexte ou objectif de cet espace..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="rounded-xl resize-none text-xs"
-            />
-          </div>
+        {error && (
+          <p className="rounded-2xl bg-rose-500/10 px-3.5 py-2.5 text-xs font-medium text-rose-600 dark:text-rose-400">
+            {error}
+          </p>
+        )}
 
-          {error && (
-            <p className="rounded-xl bg-destructive/10 px-3 py-2 text-xs font-medium text-destructive">
-              {error}
-            </p>
-          )}
-
-          <div className="flex justify-end gap-2 pt-1">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => onOpenChange(false)}
-              className="h-10 rounded-xl text-xs"
-            >
-              Annuler
-            </Button>
-            <Button
-              type="submit"
-              disabled={createMutation.isPending}
-              className="apple-press h-10 rounded-xl px-5 text-xs font-semibold"
-            >
-              {createMutation.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                "Créer l'espace"
-              )}
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+        <FormActions
+          submitLabel="Créer l'espace"
+          pendingLabel="Création..."
+          isPending={createMutation.isPending}
+          accent="indigo"
+          onCancel={handleClose}
+        />
+      </form>
+    </FormSheet>
   );
 };

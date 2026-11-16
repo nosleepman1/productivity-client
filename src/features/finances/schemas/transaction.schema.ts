@@ -19,9 +19,10 @@ export const transactionFormSchema = z.object({
   date: z
     .string()
     .trim()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Format de date invalide (AAAA-MM-JJ)")
-    .optional()
-    .or(z.literal("")),
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "La date de l'opération est requise (AAAA-MM-JJ)"),
+  categorie: z.string().trim().optional(),
+  moyenPaiement: z.string().trim().optional(),
+  projetId: z.string().trim().optional().nullable(),
 });
 
 /** Type inféré des valeurs du formulaire de transaction (revenu ou dépense). */
@@ -40,11 +41,17 @@ export function toTransactionDto(
   const dto: CreateRevenuDto & CreateDepenseDto = {
     montant: Math.trunc(values.montant),
     description: values.description.trim(),
+    date: new Date(`${values.date.trim()}T00:00:00.000Z`).toISOString(),
   };
 
-  const date = values.date?.trim();
-  if (date) {
-    dto.date = new Date(`${date}T00:00:00.000Z`).toISOString();
+  if (values.categorie) {
+    dto.categorie = values.categorie;
+  }
+  if (values.moyenPaiement) {
+    dto.moyenPaiement = values.moyenPaiement;
+  }
+  if (values.projetId !== undefined) {
+    dto.projetId = values.projetId || null;
   }
 
   return dto;

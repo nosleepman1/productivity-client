@@ -5,6 +5,7 @@ import {
   ChevronRight,
   RotateCcw,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import type { StatutSuivi } from "@/types/finances";
 
 /** Options de tri disponibles selon l'onglet actif. */
@@ -40,11 +41,11 @@ export interface FinanceFiltersBarProps {
   onReset: () => void;
 }
 
-const STATUT_OPTIONS: { value: StatutSuivi | ""; label: string }[] = [
-  { value: "", label: "Tous" },
-  { value: "EN_COURS", label: "En cours" },
-  { value: "EN_RETARD", label: "En retard" },
-  { value: "SOLDEE", label: "Soldées" },
+const STATUT_OPTIONS: { value: StatutSuivi | ""; labelKey: string }[] = [
+  { value: "", labelKey: "common.all" },
+  { value: "EN_COURS", labelKey: "common.inProgress" },
+  { value: "EN_RETARD", labelKey: "common.overdue" },
+  { value: "SOLDEE", labelKey: "common.settled" },
 ];
 
 /**
@@ -68,6 +69,7 @@ export function FinanceFiltersBar({
   onPageChange,
   onReset,
 }: FinanceFiltersBarProps) {
+  const { t } = useTranslation();
   const hasFilters = Boolean(du || au || statut);
 
   return (
@@ -81,7 +83,7 @@ export function FinanceFiltersBar({
               htmlFor="finance-filter-du"
               className="text-xs text-[var(--text-secondary)]"
             >
-              Du
+              {t("common.from")}
             </label>
             <input
               id="finance-filter-du"
@@ -98,7 +100,7 @@ export function FinanceFiltersBar({
               htmlFor="finance-filter-au"
               className="text-xs text-[var(--text-secondary)]"
             >
-              Au
+              {t("common.to")}
             </label>
             <input
               id="finance-filter-au"
@@ -116,7 +118,7 @@ export function FinanceFiltersBar({
               className="apple-press inline-flex min-h-[36px] items-center gap-1.5 rounded-xl px-2.5 text-xs font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)] hover:text-[var(--text-primary)]"
             >
               <RotateCcw className="h-3.5 w-3.5" />
-              Réinitialiser
+              {t("common.reset")}
             </button>
           )}
         </div>
@@ -124,17 +126,17 @@ export function FinanceFiltersBar({
         {/* Tri */}
         <div className="flex flex-wrap items-center gap-2">
           <select
-            aria-label="Trier par"
+            aria-label={t("common.sortBy")}
             value={tri}
             onChange={(e) => onTriChange(e.target.value as FinanceSortField)}
             className="min-h-[38px] rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-3 text-xs font-medium text-[var(--text-primary)] outline-none"
           >
-            <option value="date">Date</option>
-            <option value="montant">Montant</option>
+            <option value="date">{t("common.date")}</option>
+            <option value="montant">{t("common.amount")}</option>
             {showStatutFilter ? (
-              <option value="datePromise">Échéance promise</option>
+              <option value="datePromise">{t("common.promisedDue")}</option>
             ) : (
-              <option value="createdAt">Ajout récent</option>
+              <option value="createdAt">{t("common.recentAdded")}</option>
             )}
           </select>
 
@@ -144,7 +146,7 @@ export function FinanceFiltersBar({
             className="apple-press inline-flex min-h-[38px] items-center gap-1.5 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-3 text-xs font-medium text-[var(--text-primary)] hover:bg-[var(--bg-elevated)]"
           >
             <ArrowDownUp className="h-3.5 w-3.5 text-[var(--text-secondary)]" />
-            {ordre === "desc" ? "Décroissant" : "Croissant"}
+            {ordre === "desc" ? t("common.desc") : t("common.asc")}
           </button>
         </div>
       </div>
@@ -165,7 +167,7 @@ export function FinanceFiltersBar({
                     : "bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                 }`}
               >
-                {opt.label}
+                {t(opt.labelKey)}
               </button>
             );
           })}
@@ -176,15 +178,14 @@ export function FinanceFiltersBar({
       {totalPages > 1 && (
         <div className="flex items-center justify-between border-t border-[var(--border-subtle)] pt-2.5 text-xs text-[var(--text-secondary)]">
           <span className="tabular-nums">
-            Page {page} sur {totalPages} · {totalItems} élément
-            {totalItems > 1 ? "s" : ""}
+            {t("common.pageOf", { page, total: totalPages, count: totalItems })}
           </span>
           <div className="flex items-center gap-1.5">
             <button
               type="button"
               disabled={page <= 1}
               onClick={() => onPageChange(page - 1)}
-              aria-label="Page précédente"
+              aria-label={t("common.previousPage")}
               className="apple-press flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-subtle)] text-[var(--text-primary)] disabled:opacity-40"
             >
               <ChevronLeft className="h-4 w-4" />
@@ -193,7 +194,7 @@ export function FinanceFiltersBar({
               type="button"
               disabled={page >= totalPages}
               onClick={() => onPageChange(page + 1)}
-              aria-label="Page suivante"
+              aria-label={t("common.nextPage")}
               className="apple-press flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-subtle)] text-[var(--text-primary)] disabled:opacity-40"
             >
               <ChevronRight className="h-4 w-4" />

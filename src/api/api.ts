@@ -3,6 +3,7 @@ import axios, {
   type AxiosInstance,
   type InternalAxiosRequestConfig,
 } from "axios";
+import { getAppLanguage } from "@/i18n";
 
 export interface ApiError {
   statusCode: number;
@@ -60,6 +61,7 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  config.headers["Accept-Language"] = getAppLanguage();
   return config;
 });
 

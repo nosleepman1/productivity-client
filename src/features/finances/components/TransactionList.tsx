@@ -1,5 +1,6 @@
 import { Plus, ReceiptText } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
+import { useTranslation } from "react-i18next";
 import type { Depense, Revenu } from "@/types/finances";
 import { FinanceListSkeleton } from "./FinanceSkeletons";
 import { TransactionRow } from "./TransactionRow";
@@ -31,12 +32,13 @@ export function TransactionList({
   onEdit,
   onDelete,
 }: TransactionListProps) {
+  const { t } = useTranslation();
   if (isLoading) {
     return <FinanceListSkeleton count={4} />;
   }
 
   if (items.length === 0) {
-    const label = kind === "revenu" ? "revenu" : "dépense";
+    const isRev = kind === "revenu";
     return (
       <motion.div
         initial={{ opacity: 0, y: 8 }}
@@ -47,11 +49,14 @@ export function TransactionList({
           <ReceiptText className="h-6 w-6" />
         </div>
         <h3 className="mt-4 text-base font-semibold text-[var(--text-primary)]">
-          Aucun{kind === "depense" ? "e" : ""} {label} pour le moment
+          {isRev
+            ? t("financesExtra.empty.noRevenue")
+            : t("financesExtra.empty.noExpense")}
         </h3>
         <p className="mt-1 max-w-sm text-sm text-[var(--text-secondary)]">
-          Enregistrez votre premi{kind === "depense" ? "ère" : "er"} {label} en
-          FCFA pour suivre votre trésorerie en temps réel.
+          {isRev
+            ? t("financesExtra.empty.noRevenueDesc")
+            : t("financesExtra.empty.noExpenseDesc")}
         </p>
         <button
           type="button"
@@ -59,7 +64,9 @@ export function TransactionList({
           className="apple-press mt-5 inline-flex min-h-[44px] items-center gap-2 rounded-xl bg-[var(--accent)] px-4 text-sm font-semibold text-white shadow-sm"
         >
           <Plus className="h-4 w-4" />
-          Ajouter un{kind === "depense" ? "e" : ""} {label}
+          {isRev
+            ? t("financesExtra.empty.addRevenue")
+            : t("financesExtra.empty.addExpense")}
         </button>
       </motion.div>
     );

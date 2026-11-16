@@ -1,4 +1,5 @@
 import { ArrowDownUp, ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 /** Filtre d'état local pour projets et tâches. */
 export type ProductivityStatusFilter = "all" | "active" | "done";
@@ -27,10 +28,10 @@ export interface ProductivityFiltersBarProps {
   onPageChange: (nextPage: number) => void;
 }
 
-const STATUS_PILLS: { value: ProductivityStatusFilter; label: string }[] = [
-  { value: "all", label: "Tous" },
-  { value: "active", label: "En cours" },
-  { value: "done", label: "Terminés" },
+const STATUS_PILLS: { value: ProductivityStatusFilter; labelKey: string }[] = [
+  { value: "all", labelKey: "common.all" },
+  { value: "active", labelKey: "common.inProgress" },
+  { value: "done", labelKey: "common.completed" },
 ];
 
 /**
@@ -52,6 +53,7 @@ export function ProductivityFiltersBar({
   totalItems,
   onPageChange,
 }: ProductivityFiltersBarProps) {
+  const { t } = useTranslation();
   return (
     <div className="apple-surface space-y-3 rounded-2xl p-3.5">
       <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
@@ -61,14 +63,14 @@ export function ProductivityFiltersBar({
             type="search"
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Rechercher par titre ou description..."
+            placeholder={t("projetsExtra.searchPlaceholder")}
             className="min-h-[40px] w-full rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-subtle)] pl-9 pr-3 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
           />
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
           <select
-            aria-label="Trier par"
+            aria-label={t("common.sortBy")}
             value={tri}
             onChange={(e) => onTriChange(e.target.value)}
             className="min-h-[40px] rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-3 text-xs font-medium text-[var(--text-primary)] outline-none"
@@ -86,7 +88,7 @@ export function ProductivityFiltersBar({
             className="apple-press inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-3 text-xs font-medium text-[var(--text-primary)]"
           >
             <ArrowDownUp className="h-3.5 w-3.5 text-[var(--text-secondary)]" />
-            {ordre === "desc" ? "Décroissant" : "Croissant"}
+            {ordre === "desc" ? t("common.desc") : t("common.asc")}
           </button>
         </div>
       </div>
@@ -106,7 +108,7 @@ export function ProductivityFiltersBar({
                     : "bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                 }`}
               >
-                {pill.label}
+                {t(pill.labelKey)}
               </button>
             );
           })}
@@ -116,15 +118,14 @@ export function ProductivityFiltersBar({
       {totalPages > 1 && (
         <div className="flex items-center justify-between border-t border-[var(--border-subtle)] pt-2.5 text-xs text-[var(--text-secondary)]">
           <span className="tabular-nums">
-            Page {page} sur {totalPages} · {totalItems} élément
-            {totalItems > 1 ? "s" : ""}
+            {t("common.pageOf", { page, total: totalPages, count: totalItems })}
           </span>
           <div className="flex items-center gap-1.5">
             <button
               type="button"
               disabled={page <= 1}
               onClick={() => onPageChange(page - 1)}
-              aria-label="Page précédente"
+              aria-label={t("common.previousPage")}
               className="apple-press flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-subtle)] text-[var(--text-primary)] disabled:opacity-40"
             >
               <ChevronLeft className="h-4 w-4" />
@@ -133,7 +134,7 @@ export function ProductivityFiltersBar({
               type="button"
               disabled={page >= totalPages}
               onClick={() => onPageChange(page + 1)}
-              aria-label="Page suivante"
+              aria-label={t("common.nextPage")}
               className="apple-press flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-subtle)] text-[var(--text-primary)] disabled:opacity-40"
             >
               <ChevronRight className="h-4 w-4" />

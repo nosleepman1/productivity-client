@@ -1,12 +1,24 @@
 import { useState, type FormEvent } from "react";
-import { X } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { BellRing, CalendarPlus, CheckCircle2, CheckSquare } from "lucide-react";
+import {
+  FORM_INPUT_CLASS,
+  FORM_TEXTAREA_CLASS,
+  FormActions,
+  FormField,
+  FormSheet,
+} from "@/components/ui/FormSheet";
 import { toDateInputValue } from "@/features/finances/utils/format";
 import {
   tacheFormSchema,
   toCreateTacheDto,
 } from "@/features/productivity/schemas/tache.schema";
-import type { CreateTacheDto, Tache } from "@/types/productivity";
+import { cn } from "@/lib/utils";
+import type {
+  CreateTacheDto,
+  PrioriteTache,
+  Projet,
+  Tache,
+} from "@/types/productivity";
 
 /** Propriétés de la modale de création/édition de tâche. */
 export interface TacheFormModalProps {
@@ -14,6 +26,8 @@ export interface TacheFormModalProps {
   open: boolean;
   /** Tâche existante en mode édition, sinon `null`. */
   initialData: Tache | null;
+  /** Liste optionnelle des projets pour rattacher la tâche (ou la laisser en solo). */
+  projets?: Projet[];
   /** Indique si la requête est en cours. */
   isPending: boolean;
   /** Ferme la modale. */
@@ -22,8 +36,19 @@ export interface TacheFormModalProps {
   onSubmit: (dto: CreateTacheDto) => void;
 }
 
+function extraireHeureLocale(iso?: string): string {
+  if (!iso) return "";
+  if (iso.endsWith("T00:00:00.000Z")) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  return `${hh}:${mm}`;
+}
+
 function TacheInnerForm({
   initialData,
+  projets = [],
   isPending,
   onClose,
   onSubmit,
@@ -38,6 +63,21 @@ function TacheInnerForm({
       ? toDateInputValue(initialData.dateLimite)
       : toDateInputValue(new Date().toISOString()),
   );
+  const [heureLimite, setHeureLimite] = useState(
+    initialData ? extraireHeureLocale(initialData.dateLimite) : "",
+  );
+  const [priorite, setPriorite] = useState<PrioriteTache>(
+    initialData?.priorite ?? "MOYENNE",
+  );
+  const [projetId, setProjetId] = useState<string>(
+    initialData?.projetId ?? "",
+  );
+  const [rappelActif, setRappelActif] = useState(
+    initialData?.rappelActif ?? true,
+  );
+  const [syncCalendrier, setSyncCalendrier] = useState(
+    initialData?.syncCalendrier ?? false,
+  );
   const [estTerminee, setEstTerminee] = useState(
     initialData?.estTerminee ?? false,
   );
@@ -49,6 +89,11 @@ function TacheInnerForm({
       titre,
       description,
       dateLimite,
+      heureLimite,
+      priorite,
+      projetId: projetId || null,
+      rappelActif,
+      syncCalendrier,
       estTerminee,
     });
 
@@ -67,112 +112,194 @@ function TacheInnerForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="mt-5 space-y-4">
-      <div>
-        <label
-          htmlFor="tache-titre"
-          className="mb-1.5 block text-xs font-medium text-[var(--text-secondary)]"
-        >
-          Titre de la tâche
-        </label>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <FormField
+        htmlFor="tache-titre"
+        label="Titre de la tâche"
+        required
+        error={errors.titre}
+      >
         <input
           id="tache-titre"
           type="text"
           maxLength={150}
-          placeholder="Ex : Finaliser la maquette écran d'accueil"
+          placeholder="Ex : Laver le linge à 17h ou Finaliser la maquette"
           value={titre}
           onChange={(e) => setTitre(e.target.value)}
-          className="min-h-[44px] w-full rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-3.5 text-sm font-medium text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
-          autoFocus
+          className={cn(FORM_INPUT_CLASS, "font-medium")}
         />
-        {errors.titre && (
-          <p className="mt-1 text-xs text-rose-500">{errors.titre}</p>
-        )}
+      </FormField>
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <FormField
+          htmlFor="tache-date-limite"
+          label="Jour prévu / Échéance"
+          required
+          error={errors.dateLimite}
+        >
+          <input
+            id="tache-date-limite"
+            type="date"
+            value={dateLimite}
+            onChange={(e) => setDateLimite(e.target.value)}
+            className={cn(FORM_INPUT_CLASS, "tabular-nums")}
+          />
+        </FormField>
+
+        <FormField
+          htmlFor="tache-heure-limite"
+          label="Heure précise"
+          hint="Optionnelle (ex: 17:00)"
+          error={errors.heureLimite}
+        >
+          <input
+            id="tache-heure-limite"
+            type="time"
+            value={heureLimite}
+            onChange={(e) => setHeureLimite(e.target.value)}
+            className={cn(FORM_INPUT_CLASS, "tabular-nums")}
+          />
+        </FormField>
       </div>
 
-      <div>
-        <label
-          htmlFor="tache-description"
-          className="mb-1.5 block text-xs font-medium text-[var(--text-secondary)]"
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <FormField htmlFor="tache-priorite" label="Priorité">
+          <select
+            id="tache-priorite"
+            value={priorite}
+            onChange={(e) => setPriorite(e.target.value as PrioriteTache)}
+            className={FORM_INPUT_CLASS}
+          >
+            <option value="BASSE">Basse</option>
+            <option value="MOYENNE">Moyenne</option>
+            <option value="HAUTE">Haute</option>
+            <option value="URGENTE">Urgente</option>
+          </select>
+        </FormField>
+
+        <FormField
+          htmlFor="tache-projet"
+          label="Projet associé"
+          hint="Optionnel (solo par défaut)"
         >
-          Description
-        </label>
+          <select
+            id="tache-projet"
+            value={projetId}
+            onChange={(e) => setProjetId(e.target.value)}
+            className={FORM_INPUT_CLASS}
+          >
+            <option value="">Aucun (Tâche indépendante)</option>
+            {projets.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.titre}
+              </option>
+            ))}
+          </select>
+        </FormField>
+      </div>
+
+      <FormField
+        htmlFor="tache-description"
+        label="Description / Notes"
+        hint="Optionnelle"
+        error={errors.description}
+      >
         <textarea
           id="tache-description"
-          rows={3}
+          rows={2}
           maxLength={1000}
-          placeholder="Détails de l'action à réaliser..."
+          placeholder="Détails optionnels..."
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="w-full rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-subtle)] p-3.5 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
+          className={FORM_TEXTAREA_CLASS}
         />
-        {errors.description && (
-          <p className="mt-1 text-xs text-rose-500">{errors.description}</p>
-        )}
-      </div>
+      </FormField>
 
-      <div>
-        <label
-          htmlFor="tache-date-limite"
-          className="mb-1.5 block text-xs font-medium text-[var(--text-secondary)]"
-        >
-          Date limite
-        </label>
-        <input
-          id="tache-date-limite"
-          type="date"
-          value={dateLimite}
-          onChange={(e) => setDateLimite(e.target.value)}
-          className="min-h-[44px] w-full rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-3.5 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
-        />
-        {errors.dateLimite && (
-          <p className="mt-1 text-xs text-rose-500">{errors.dateLimite}</p>
-        )}
-      </div>
-
-      <label className="flex min-h-[44px] cursor-pointer items-center gap-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-3.5">
-        <input
-          type="checkbox"
-          checked={estTerminee}
-          onChange={(e) => setEstTerminee(e.target.checked)}
-          className="h-4 w-4 accent-[var(--accent)]"
-        />
-        <span className="text-sm font-medium text-[var(--text-primary)]">
-          Tâche déjà accomplie
-        </span>
-      </label>
-
-      <div className="flex items-center justify-end gap-2.5 pt-2">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <button
           type="button"
-          onClick={onClose}
-          disabled={isPending}
-          className="apple-press min-h-[44px] rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-4 text-sm font-medium text-[var(--text-primary)]"
+          onClick={() => setRappelActif((v) => !v)}
+          aria-pressed={rappelActif}
+          className={cn(
+            "apple-press flex items-center justify-between rounded-2xl border px-3.5 py-2.5 text-left transition-colors",
+            rappelActif
+              ? "border-indigo-500/40 bg-indigo-500/10 text-indigo-700 dark:text-indigo-300"
+              : "border-[var(--border)] bg-[var(--background)] text-[var(--muted-foreground)]",
+          )}
         >
-          Annuler
+          <div className="min-w-0 pr-2">
+            <p className="text-xs font-semibold">Rappels progressifs</p>
+            <p className="text-[10px] opacity-80 truncate">
+              JJ, -10h, -5h, -2h, -1h, -30m, -5m
+            </p>
+          </div>
+          <BellRing className="h-4 w-4 shrink-0" />
         </button>
+
         <button
-          type="submit"
-          disabled={isPending}
-          className="apple-press min-h-[44px] rounded-xl bg-[var(--accent)] px-5 text-sm font-semibold text-white shadow-sm disabled:opacity-50"
+          type="button"
+          onClick={() => setSyncCalendrier((v) => !v)}
+          aria-pressed={syncCalendrier}
+          className={cn(
+            "apple-press flex items-center justify-between rounded-2xl border px-3.5 py-2.5 text-left transition-colors",
+            syncCalendrier
+              ? "border-sky-500/40 bg-sky-500/10 text-sky-700 dark:text-sky-300"
+              : "border-[var(--border)] bg-[var(--background)] text-[var(--muted-foreground)]",
+          )}
         >
-          {isPending
-            ? "Enregistrement..."
-            : isEditing
-              ? "Mettre à jour"
-              : "Créer la tâche"}
+          <div className="min-w-0 pr-2">
+            <p className="text-xs font-semibold">Planifier dans l'agenda</p>
+            <p className="text-[10px] opacity-80 truncate">
+              Sync Google / Apple Calendar
+            </p>
+          </div>
+          <CalendarPlus className="h-4 w-4 shrink-0" />
         </button>
       </div>
+
+      <button
+        type="button"
+        onClick={() =>
+          setEstTerminee((v) => {
+            const next = !v;
+            if (next) setRappelActif(false);
+            return next;
+          })
+        }
+        aria-pressed={estTerminee}
+        className={cn(
+          "apple-press flex min-h-[44px] w-full items-center justify-between rounded-2xl border px-4 text-left transition-colors",
+          estTerminee
+            ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+            : "border-[var(--border)] bg-[var(--background)] text-[var(--foreground)]",
+        )}
+      >
+        <span className="text-xs font-medium">Tâche terminée</span>
+        <CheckCircle2
+          className={cn(
+            "h-4 w-4 transition-opacity",
+            estTerminee ? "opacity-100" : "opacity-30",
+          )}
+        />
+      </button>
+
+      <FormActions
+        submitLabel={isEditing ? "Enregistrer" : "Créer la tâche"}
+        isPending={isPending}
+        accent="indigo"
+        onCancel={onClose}
+      />
     </form>
   );
 }
 
 /**
- * Modale Apple-style pour créer ou modifier une tâche avec validation Zod.
+ * Modale mobile-first pour créer ou modifier une tâche avec validation Zod.
  */
 export function TacheFormModal({
   open,
   initialData,
+  projets,
   isPending,
   onClose,
   onSubmit,
@@ -180,58 +307,24 @@ export function TacheFormModal({
   const isEditing = Boolean(initialData);
 
   return (
-    <AnimatePresence>
-      {open && (
-        <div
-          className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="tache-modal-title"
-        >
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
-            onClick={isPending ? undefined : onClose}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm"
-          />
-
-          <motion.div
-            initial={{ opacity: 0, y: 28, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 18, scale: 0.97 }}
-            transition={{ type: "spring", stiffness: 380, damping: 30 }}
-            className="apple-surface relative z-10 max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl p-6 shadow-2xl sm:rounded-3xl"
-          >
-            <div className="flex items-center justify-between">
-              <h2
-                id="tache-modal-title"
-                className="text-lg font-semibold text-[var(--text-primary)]"
-              >
-                {isEditing ? "Modifier la tâche" : "Nouvelle tâche"}
-              </h2>
-              <button
-                type="button"
-                onClick={onClose}
-                disabled={isPending}
-                aria-label="Fermer"
-                className="apple-press flex h-9 w-9 items-center justify-center rounded-full text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)]"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-
-            <TacheInnerForm
-              key={initialData?.id ?? "new-tache"}
-              initialData={initialData}
-              isPending={isPending}
-              onClose={onClose}
-              onSubmit={onSubmit}
-            />
-          </motion.div>
-        </div>
-      )}
-    </AnimatePresence>
+    <FormSheet
+      open={open}
+      titleId="tache-modal-title"
+      title={isEditing ? "Modifier la tâche" : "Nouvelle tâche"}
+      subtitle="Action autonome ou rattachée à un projet, avec rappels intelligents"
+      icon={<CheckSquare className="h-5 w-5" />}
+      accent="indigo"
+      isPending={isPending}
+      onClose={onClose}
+    >
+      <TacheInnerForm
+        key={initialData?.id ?? "new-tache"}
+        initialData={initialData}
+        projets={projets}
+        isPending={isPending}
+        onClose={onClose}
+        onSubmit={onSubmit}
+      />
+    </FormSheet>
   );
 }

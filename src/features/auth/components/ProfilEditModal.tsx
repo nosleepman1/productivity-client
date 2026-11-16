@@ -1,15 +1,14 @@
 import React, { useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, UserCog } from "lucide-react";
+import { extractApiError } from "@/api/api";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+  FORM_INPUT_CLASS,
+  FORM_SELECT_CLASS,
+  FORM_TEXTAREA_CLASS,
+  FormActions,
+  FormField,
+  FormSheet,
+} from "@/components/ui/FormSheet";
 import {
   useProfil,
   useUpdateProfilMutation,
@@ -18,17 +17,23 @@ import {
   PROFIL_LANGUES,
   updateProfilSchema,
 } from "@/features/auth/schemas/profil.schema";
-import { extractApiError } from "@/api/api";
+import { cn } from "@/lib/utils";
 import type { LangueProfil, Profil } from "@/types/auth";
 
-interface ProfilEditModalProps {
+/** Propriétés de la modale d'édition du profil utilisateur. */
+export interface ProfilEditModalProps {
+  /** Contrôle l'ouverture de la modale. */
   open: boolean;
+  /** Met à jour l'état d'ouverture. */
   onOpenChange: (open: boolean) => void;
 }
+
+import { setAppLanguage } from "@/i18n";
 
 const LANGUE_LABELS: Record<LangueProfil, string> = {
   fr: "Français",
   en: "English",
+  ar: "العربية",
   wo: "Wolof",
 };
 
@@ -74,6 +79,7 @@ const ProfilForm: React.FC<ProfilFormProps> = ({ initialProfil, onClose }) => {
 
     try {
       await updateMutation.mutateAsync(parsed.data);
+      setAppLanguage(langue);
       onClose();
     } catch (err) {
       const apiErr = extractApiError(err);
@@ -84,30 +90,26 @@ const ProfilForm: React.FC<ProfilFormProps> = ({ initialProfil, onClose }) => {
   };
 
   return (
-    <form noValidate onSubmit={handleSubmit} className="space-y-4 pt-1">
+    <form noValidate onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <div className="space-y-1.5">
-          <label className="text-xs font-medium text-foreground block">
-            Téléphone
-          </label>
-          <Input
+        <FormField htmlFor="profil-tel" label="Téléphone">
+          <input
+            id="profil-tel"
             type="tel"
             placeholder="+221 77 123 45 67"
             value={telephone}
             onChange={(e) => setTelephone(e.target.value)}
-            className="h-10 rounded-xl tabular-nums"
+            className={cn(FORM_INPUT_CLASS, "tabular-nums")}
           />
-        </div>
+        </FormField>
 
-        <div className="space-y-1.5">
-          <label className="text-xs font-medium text-foreground block">
-            Langue
-          </label>
+        <FormField htmlFor="profil-langue" label="Langue">
           <select
+            id="profil-langue"
             value={langue}
             onChange={(e) => setLangue(e.target.value as LangueProfil)}
             aria-label="Langue du profil"
-            className="h-10 w-full rounded-xl border border-input bg-background px-3 text-xs font-medium text-foreground outline-none focus:ring-2 focus:ring-ring"
+            className={FORM_SELECT_CLASS}
           >
             {PROFIL_LANGUES.map((code) => (
               <option key={code} value={code}>
@@ -115,41 +117,37 @@ const ProfilForm: React.FC<ProfilFormProps> = ({ initialProfil, onClose }) => {
               </option>
             ))}
           </select>
-        </div>
+        </FormField>
       </div>
 
-      <div className="space-y-1.5">
-        <label className="text-xs font-medium text-foreground block">
-          Fuseau horaire (IANA)
-        </label>
-        <Input
+      <FormField htmlFor="profil-tz" label="Fuseau horaire (IANA)">
+        <input
+          id="profil-tz"
           placeholder="Africa/Dakar"
           value={fuseauHoraire}
           onChange={(e) => setFuseauHoraire(e.target.value)}
-          className="h-10 rounded-xl"
+          className={FORM_INPUT_CLASS}
         />
-      </div>
+      </FormField>
 
-      <div className="space-y-1.5">
-        <label className="text-xs font-medium text-foreground block">
-          Biographie
-        </label>
-        <Textarea
+      <FormField htmlFor="profil-bio" label="Biographie" hint="Optionnelle">
+        <textarea
+          id="profil-bio"
           rows={3}
           maxLength={500}
           placeholder="Quelques mots sur votre activité..."
           value={biographie}
           onChange={(e) => setBiographie(e.target.value)}
-          className="rounded-xl resize-none text-xs"
+          className={cn(FORM_TEXTAREA_CLASS, "resize-none")}
         />
-      </div>
+      </FormField>
 
-      <div className="flex items-center justify-between rounded-xl border border-border/80 bg-muted/40 px-3.5 py-2.5">
+      <div className="flex items-center justify-between rounded-2xl border border-[var(--border)] bg-[var(--background)] px-4 py-3">
         <div>
-          <p className="text-xs font-medium text-foreground">
+          <p className="text-sm font-medium text-[var(--foreground)]">
             Rappels quotidiens
           </p>
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-xs text-[var(--muted-foreground)]">
             Récapitulatif par mail des dettes et créances
           </p>
         </div>
@@ -159,49 +157,39 @@ const ProfilForm: React.FC<ProfilFormProps> = ({ initialProfil, onClose }) => {
           aria-checked={rappelsQuotidiens}
           aria-label="Activer les rappels quotidiens"
           onClick={() => setRappelsQuotidiens((v) => !v)}
-          className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-150 ${
-            rappelsQuotidiens ? "bg-[var(--finance)]" : "bg-muted"
-          }`}
+          className={cn(
+            "relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-150",
+            rappelsQuotidiens ? "bg-emerald-500" : "bg-[var(--muted)]",
+          )}
         >
           <span
-            className={`pointer-events-none inline-block h-6 w-6 rounded-full bg-white shadow-sm transition-transform duration-150 ${
-              rappelsQuotidiens ? "translate-x-5" : "translate-x-0"
-            }`}
+            className={cn(
+              "pointer-events-none inline-block h-6 w-6 rounded-full bg-white shadow-sm transition-transform duration-150",
+              rappelsQuotidiens ? "translate-x-5" : "translate-x-0",
+            )}
           />
         </button>
       </div>
 
       {error && (
-        <p className="rounded-xl bg-destructive/10 px-3 py-2 text-xs font-medium text-destructive">
+        <p className="rounded-2xl bg-rose-500/10 px-3.5 py-2.5 text-xs font-medium text-rose-600 dark:text-rose-400">
           {error}
         </p>
       )}
 
-      <div className="flex justify-end gap-2 pt-1">
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={onClose}
-          className="h-10 rounded-xl text-xs"
-        >
-          Annuler
-        </Button>
-        <Button
-          type="submit"
-          disabled={updateMutation.isPending}
-          className="apple-press h-10 rounded-xl px-5 text-xs font-semibold"
-        >
-          {updateMutation.isPending ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            "Enregistrer"
-          )}
-        </Button>
-      </div>
+      <FormActions
+        submitLabel="Enregistrer"
+        isPending={updateMutation.isPending}
+        accent="primary"
+        onCancel={onClose}
+      />
     </form>
   );
 };
 
+/**
+ * Modale mobile-first d'édition du profil et des préférences utilisateur.
+ */
 export const ProfilEditModal: React.FC<ProfilEditModalProps> = ({
   open,
   onOpenChange,
@@ -209,29 +197,26 @@ export const ProfilEditModal: React.FC<ProfilEditModalProps> = ({
   const { data: profil, isLoading } = useProfil();
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[440px] rounded-3xl">
-        <DialogHeader>
-          <DialogTitle className="text-base font-semibold">
-            Profil &amp; Préférences
-          </DialogTitle>
-          <DialogDescription className="text-xs">
-            Synchronisé avec votre compte sur tous vos appareils.
-          </DialogDescription>
-        </DialogHeader>
-
-        {isLoading ? (
-          <div className="flex items-center justify-center py-10">
-            <Loader2 className="h-5 w-5 animate-spin text-primary" />
-          </div>
-        ) : (
-          <ProfilForm
-            key={profil?.updatedAt ?? "empty"}
-            initialProfil={profil}
-            onClose={() => onOpenChange(false)}
-          />
-        )}
-      </DialogContent>
-    </Dialog>
+    <FormSheet
+      open={open}
+      titleId="profil-modal-title"
+      title="Profil & Préférences"
+      subtitle="Synchronisé avec votre compte sur tous vos appareils"
+      icon={<UserCog className="h-5 w-5" />}
+      accent="primary"
+      onClose={() => onOpenChange(false)}
+    >
+      {isLoading ? (
+        <div className="flex items-center justify-center py-10">
+          <Loader2 className="h-5 w-5 animate-spin text-indigo-500" />
+        </div>
+      ) : (
+        <ProfilForm
+          key={profil?.updatedAt ?? "empty"}
+          initialProfil={profil}
+          onClose={() => onOpenChange(false)}
+        />
+      )}
+    </FormSheet>
   );
 };

@@ -1,10 +1,17 @@
 import { useState, type FormEvent } from "react";
-import { X } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { Lightbulb } from "lucide-react";
+import {
+  FORM_INPUT_CLASS,
+  FORM_TEXTAREA_CLASS,
+  FormActions,
+  FormField,
+  FormSheet,
+} from "@/components/ui/FormSheet";
 import {
   noteFormSchema,
   toCreateNoteDto,
 } from "@/features/productivity/schemas/note.schema";
+import { cn } from "@/lib/utils";
 import type { CreateNoteDto, Note } from "@/types/productivity";
 
 /** Propriétés de la modale de création/édition d'une note. */
@@ -51,14 +58,13 @@ function NoteInnerForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="mt-5 space-y-4">
-      <div>
-        <label
-          htmlFor="note-titre"
-          className="mb-1.5 block text-xs font-medium text-[var(--text-secondary)]"
-        >
-          Titre de la note
-        </label>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <FormField
+        htmlFor="note-titre"
+        label="Titre de la note"
+        required
+        error={errors.titre}
+      >
         <input
           id="note-titre"
           type="text"
@@ -66,62 +72,39 @@ function NoteInnerForm({
           placeholder="Ex : Idée fonctionnalité, notes réunion..."
           value={titre}
           onChange={(e) => setTitre(e.target.value)}
-          className="min-h-[44px] w-full rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-3.5 text-sm font-medium text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
-          autoFocus
+          className={cn(FORM_INPUT_CLASS, "font-medium")}
         />
-        {errors.titre && (
-          <p className="mt-1 text-xs text-rose-500">{errors.titre}</p>
-        )}
-      </div>
+      </FormField>
 
-      <div>
-        <label
-          htmlFor="note-contenu"
-          className="mb-1.5 block text-xs font-medium text-[var(--text-secondary)]"
-        >
-          Contenu
-        </label>
+      <FormField
+        htmlFor="note-contenu"
+        label="Contenu"
+        required
+        error={errors.contenu}
+      >
         <textarea
           id="note-contenu"
-          rows={7}
+          rows={6}
           maxLength={10000}
           placeholder="Rédigez librement votre note ou idée..."
           value={contenu}
           onChange={(e) => setContenu(e.target.value)}
-          className="w-full rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-subtle)] p-3.5 text-sm leading-relaxed text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
+          className={FORM_TEXTAREA_CLASS}
         />
-        {errors.contenu && (
-          <p className="mt-1 text-xs text-rose-500">{errors.contenu}</p>
-        )}
-      </div>
+      </FormField>
 
-      <div className="flex items-center justify-end gap-2.5 pt-2">
-        <button
-          type="button"
-          onClick={onClose}
-          disabled={isPending}
-          className="apple-press min-h-[44px] rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-4 text-sm font-medium text-[var(--text-primary)]"
-        >
-          Annuler
-        </button>
-        <button
-          type="submit"
-          disabled={isPending}
-          className="apple-press min-h-[44px] rounded-xl bg-[var(--accent)] px-5 text-sm font-semibold text-white shadow-sm disabled:opacity-50"
-        >
-          {isPending
-            ? "Enregistrement..."
-            : isEditing
-              ? "Enregistrer"
-              : "Créer la note"}
-        </button>
-      </div>
+      <FormActions
+        submitLabel={isEditing ? "Enregistrer" : "Créer la note"}
+        isPending={isPending}
+        accent="amber"
+        onCancel={onClose}
+      />
     </form>
   );
 }
 
 /**
- * Modale Apple-style pour créer ou éditer une note avec validation Zod.
+ * Modale mobile-first pour créer ou éditer une note avec validation Zod.
  */
 export function NoteFormModal({
   open,
@@ -133,58 +116,24 @@ export function NoteFormModal({
   const isEditing = Boolean(initialData);
 
   return (
-    <AnimatePresence>
-      {open && (
-        <div
-          className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="note-modal-title"
-        >
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
-            onClick={isPending ? undefined : onClose}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm"
-          />
-
-          <motion.div
-            initial={{ opacity: 0, y: 28, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 18, scale: 0.97 }}
-            transition={{ type: "spring", stiffness: 380, damping: 30 }}
-            className="apple-surface relative z-10 max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl p-6 shadow-2xl sm:rounded-3xl"
-          >
-            <div className="flex items-center justify-between">
-              <h2
-                id="note-modal-title"
-                className="text-lg font-semibold text-[var(--text-primary)]"
-              >
-                {isEditing ? "Modifier la note" : "Nouvelle note"}
-              </h2>
-              <button
-                type="button"
-                onClick={onClose}
-                disabled={isPending}
-                aria-label="Fermer"
-                className="apple-press flex h-9 w-9 items-center justify-center rounded-full text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)]"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-
-            <NoteInnerForm
-              key={initialData?.id ?? "new-note"}
-              initialData={initialData}
-              isPending={isPending}
-              onClose={onClose}
-              onSubmit={onSubmit}
-            />
-          </motion.div>
-        </div>
-      )}
-    </AnimatePresence>
+    <FormSheet
+      open={open}
+      titleId="note-modal-title"
+      title={isEditing ? "Modifier la note" : "Nouvelle note"}
+      subtitle="Capturez une idée ou un compte-rendu rapidement"
+      icon={<Lightbulb className="h-5 w-5" />}
+      accent="amber"
+      size="lg"
+      isPending={isPending}
+      onClose={onClose}
+    >
+      <NoteInnerForm
+        key={initialData?.id ?? "new-note"}
+        initialData={initialData}
+        isPending={isPending}
+        onClose={onClose}
+        onSubmit={onSubmit}
+      />
+    </FormSheet>
   );
 }

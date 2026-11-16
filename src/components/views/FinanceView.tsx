@@ -1,21 +1,28 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ArrowDownLeft,
   ArrowUpRight,
+  BarChart3,
+  ChevronDown,
   HandCoins,
   Plus,
   Receipt,
-  Sparkles,
+  Users,
 } from "lucide-react";
 import { AnimatePresence, motion, MotionConfig } from "motion/react";
+import { cn } from "@/lib/utils";
+import { ContactsSection } from "@/features/contacts/components/ContactsSection";
 import { useActiveEspace } from "@/features/espaces/hooks/useEspaces";
 import { CashFlowChart } from "@/features/finances/components/CashFlowChart";
+import { CategoryBudgetsCard } from "@/features/finances/components/CategoryBudgetsCard";
+import { useFinancesResume } from "@/features/finances/hooks/useFinancesResume";
 import { DeleteConfirmDialog } from "@/features/finances/components/DeleteConfirmDialog";
 import {
   FinanceFiltersBar,
   type FinanceSortField,
 } from "@/features/finances/components/FinanceFiltersBar";
-import { FinanceKpiGrid } from "@/features/finances/components/FinanceKpiGrid";
+import { FinanceContextSummary } from "@/features/finances/components/FinanceContextSummary";
 import { FinanceKpiSkeleton } from "@/features/finances/components/FinanceSkeletons";
 import { PaiementsDrawerModal } from "@/features/finances/components/PaiementsDrawerModal";
 import { RelanceModal } from "@/features/finances/components/RelanceModal";
@@ -70,7 +77,12 @@ import type {
 } from "@/types/finances";
 
 /** Onglets disponibles dans le module Finances. */
-export type FinanceTab = "revenus" | "depenses" | "dettes" | "creances";
+export type FinanceTab =
+  | "revenus"
+  | "depenses"
+  | "dettes"
+  | "creances"
+  | "contacts";
 
 type DeleteTarget =
   | { kind: "revenu"; item: Revenu }
@@ -79,25 +91,22 @@ type DeleteTarget =
   | { kind: "creance"; item: Creance }
   | { kind: "paiement"; suiviKind: "dette" | "creance"; suiviId: string; item: Paiement };
 
-const TABS: {
-  id: FinanceTab;
-  label: string;
-  icon: typeof ArrowDownLeft;
-}[] = [
-  { id: "revenus", label: "Revenus", icon: ArrowDownLeft },
-  { id: "depenses", label: "Dépenses", icon: ArrowUpRight },
-  { id: "dettes", label: "Dettes", icon: Receipt },
-  { id: "creances", label: "Créances", icon: HandCoins },
-];
+/**
+ * Propriétés de la vue principale du module Finances.
+ */
+export interface FinanceViewProps {
+  /** Sous-onglet financier actif piloté par la barre de navigation inférieure. */
+  activeSubTab?: FinanceTab;
+}
 
 /**
  * Vue principale du module Finances, entièrement connectée à l'API NestJS,
  * isolée par `espaceId` actif et animée avec `motion/react`.
  */
-export function FinanceView() {
+export function FinanceView({ activeSubTab = "revenus" }: FinanceViewProps = {}) {
   const { activeEspace, activeEspaceId, isLoading: isLoadingEspace } = useActiveEspace();
 
-  const [activeTab, setActiveTab] = useState<FinanceTab>("revenus");
+  const activeTab = activeSubTab;
   const [page, setPage] = useState(1);
   const [du, setDu] = useState("");
   const [au, setAu] = useState("");
@@ -125,6 +134,8 @@ export function FinanceView() {
 
   const [relanceTarget, setRelanceTarget] = useState<Creance | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
+  const [contactCreateSignal, setContactCreateSignal] = useState(0);
+  const [showChart, setShowChart] = useState(false);
 
   const txQuery = useMemo(
     () => ({
@@ -189,28 +200,20 @@ export function FinanceView() {
   const addCreancePaiement = useAddCreancePaiementMutation(activeEspaceId);
   const removeCreancePaiement = useRemoveCreancePaiementMutation(activeEspaceId);
 
+  const financesResume = useFinancesResume(activeEspaceId);
+
   const totalRevenus = useMemo(
-    () => (revenusQuery.data?.data ?? []).reduce((sum, r) => sum + r.montant, 0),
-    [revenusQuery.data],
+    () =>
+      financesResume.data?.totalRevenus ??
+      (revenusQuery.data?.data ?? []).reduce((sum, r) => sum + r.montant, 0),
+    [financesResume.data?.totalRevenus, revenusQuery.data],
   );
   const totalDepenses = useMemo(
-    () => (depensesQuery.data?.data ?? []).reduce((sum, d) => sum + d.montant, 0),
-    [depensesQuery.data],
+    () =>
+      financesResume.data?.totalDepenses ??
+      (depensesQuery.data?.data ?? []).reduce((sum, d) => sum + d.montant, 0),
+    [financesResume.data?.totalDepenses, depensesQuery.data],
   );
-
-  const handleTabChange = (nextTab: FinanceTab) => {
-    setActiveTab(nextTab);
-    setPage(1);
-    if (
-      (nextTab === "revenus" || nextTab === "depenses") &&
-      tri === "datePromise"
-    ) {
-      setTri("date");
-    }
-    if ((nextTab === "dettes" || nextTab === "creances") && tri === "createdAt") {
-      setTri("date");
-    }
-  };
 
   const handleResetFilters = () => {
     setDu("");
@@ -226,8 +229,10 @@ export function FinanceView() {
       setTxModal({ open: true, kind: "depense", item: null });
     } else if (activeTab === "dettes") {
       setSuiviModal({ open: true, kind: "dette", item: null });
-    } else {
+    } else if (activeTab === "creances") {
       setSuiviModal({ open: true, kind: "creance", item: null });
+    } else {
+      setContactCreateSignal((n) => n + 1);
     }
   };
 
@@ -337,137 +342,196 @@ export function FinanceView() {
           null)
         : null;
 
-  const ctaLabel =
-    activeTab === "revenus"
-      ? "Nouveau revenu"
-      : activeTab === "depenses"
-        ? "Nouvelle dépense"
-        : activeTab === "dettes"
-          ? "Nouvelle dette"
-          : "Nouvelle créance";
+  const { t } = useTranslation();
+  const ctaLabel = t(`finances.cta.${activeTab}`);
+
+  const sectionMeta = {
+    revenus: {
+      title: "Revenus",
+      subtitle: "Entrées d'argent et encaissements",
+      Icon: ArrowDownLeft,
+      iconClass:
+        "bg-emerald-500/12 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-300",
+      ctaClass:
+        "bg-emerald-600 hover:bg-emerald-500 shadow-emerald-500/25",
+    },
+    depenses: {
+      title: "Dépenses",
+      subtitle: "Suivi des sorties et charges",
+      Icon: ArrowUpRight,
+      iconClass:
+        "bg-rose-500/12 text-rose-600 dark:bg-rose-500/20 dark:text-rose-300",
+      ctaClass: "bg-rose-600 hover:bg-rose-500 shadow-rose-500/25",
+    },
+    dettes: {
+      title: "Dettes",
+      subtitle: "Engagements à rembourser et échéances",
+      Icon: Receipt,
+      iconClass:
+        "bg-amber-500/12 text-amber-600 dark:bg-amber-500/20 dark:text-amber-300",
+      ctaClass: "bg-amber-600 hover:bg-amber-500 shadow-amber-500/25",
+    },
+    creances: {
+      title: "Créances",
+      subtitle: "Montants à recevoir et relances",
+      Icon: HandCoins,
+      iconClass:
+        "bg-sky-500/12 text-sky-600 dark:bg-sky-500/20 dark:text-sky-300",
+      ctaClass: "bg-sky-600 hover:bg-sky-500 shadow-sky-500/25",
+    },
+    contacts: {
+      title: "Contacts financiers",
+      subtitle: "Clients, fournisseurs et tiers",
+      Icon: Users,
+      iconClass:
+        "bg-indigo-500/12 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-300",
+      ctaClass: "bg-indigo-600 hover:bg-indigo-500 shadow-indigo-500/25",
+    },
+  }[activeTab];
+
+  const ActiveIcon = sectionMeta.Icon;
 
   return (
     <MotionConfig reducedMotion="user">
-      <div className="space-y-6 pb-24">
-        {/* En-tête contextuel */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-[var(--accent)]/10 px-2.5 py-0.5 text-xs font-semibold text-[var(--accent)]">
-              <Sparkles className="h-3 w-3" />
-              {activeEspace?.nom ?? "Espace actif"}
-            </div>
-            <h1 className="mt-1.5 text-2xl font-bold tracking-tight text-[var(--text-primary)]">
-              Finances & Trésorerie
-            </h1>
-          </div>
-
-          <button
-            type="button"
-            disabled={!activeEspaceId}
-            onClick={openCreateForActiveTab}
-            className="apple-press inline-flex min-h-[44px] items-center justify-center gap-2 rounded-2xl bg-[var(--accent)] px-4 text-sm font-semibold text-white shadow-sm disabled:opacity-50"
-          >
-            <Plus className="h-4 w-4" />
-            {ctaLabel}
-          </button>
-        </div>
-
-        {/* Cartes KPI & Graphique */}
-        {isKpiLoading ? (
-          <FinanceKpiSkeleton />
-        ) : (
-          <>
-            <FinanceKpiGrid
-              totalRevenus={totalRevenus}
-              totalDepenses={totalDepenses}
-              totalDettesRestant={dettesResume.data?.totalRestant ?? 0}
-              totalCreancesRestant={creancesResume.data?.totalRestant ?? 0}
-              dettesEnRetard={dettesResume.data?.nombreEnRetard ?? 0}
-              creancesEnRetard={creancesResume.data?.nombreEnRetard ?? 0}
-            />
-            <CashFlowChart
-              totalRevenus={totalRevenus}
-              totalDepenses={totalDepenses}
-              totalCreancesRestant={creancesResume.data?.totalRestant ?? 0}
-              totalDettesRestant={dettesResume.data?.totalRestant ?? 0}
-            />
-          </>
-        )}
-
-        {/* Navigation segmentée style Apple */}
-        <div
-          role="tablist"
-          aria-label="Catégories financières"
-          className="apple-surface grid grid-cols-2 gap-1 rounded-2xl p-1.5 sm:grid-cols-4"
-        >
-          {TABS.map((tab) => {
-            const Icon = tab.icon;
-            const active = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                role="tab"
-                type="button"
-                aria-selected={active}
-                onClick={() => handleTabChange(tab.id)}
-                className={`relative flex min-h-[42px] items-center justify-center gap-2 rounded-xl px-3 text-sm font-medium transition-colors ${
-                  active
-                    ? "text-[var(--text-primary)]"
-                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-                }`}
-              >
-                {active && (
-                  <motion.span
-                    layoutId="finance-tab-pill"
-                    transition={{ type: "spring", stiffness: 420, damping: 34 }}
-                    className="absolute inset-0 rounded-xl bg-[var(--bg-elevated)] shadow-sm ring-1 ring-[var(--border-subtle)]"
-                  />
+      <div className="space-y-5 pb-10">
+        {/* En-tête Bento contextuel */}
+        <div className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-xs sm:p-5">
+          <div className="flex flex-col gap-3.5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3.5 min-w-0">
+              <div
+                className={cn(
+                  "flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl",
+                  sectionMeta.iconClass,
                 )}
-                <Icon className="relative z-10 h-4 w-4" />
-                <span className="relative z-10">{tab.label}</span>
+              >
+                <ActiveIcon className="h-6 w-6" />
+              </div>
+              <div className="min-w-0">
+                <div className="inline-flex items-center gap-1.5 rounded-full bg-[var(--muted)] px-2.5 py-0.5 text-[11px] font-semibold text-[var(--muted-foreground)]">
+                  <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
+                  <span className="truncate">{activeEspace?.nom ?? t("common.activeSpace")}</span>
+                </div>
+                <h1 className="mt-1 truncate text-xl font-bold tracking-tight text-[var(--foreground)] sm:text-2xl">
+                  {t(`finances.sections.${activeTab}.title`)}
+                </h1>
+                <p className="truncate text-xs text-[var(--muted-foreground)]">
+                  {t(`finances.sections.${activeTab}.subtitle`)}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {activeTab !== "contacts" && (
+                <button
+                  type="button"
+                  onClick={() => setShowChart((v) => !v)}
+                  aria-expanded={showChart}
+                  className="apple-press inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-2xl border border-[var(--border)] bg-[var(--background)] px-3.5 text-xs font-semibold text-[var(--foreground)] hover:bg-[var(--muted)]"
+                >
+                  <BarChart3 className="h-4 w-4 text-indigo-500" />
+                  <span className="hidden sm:inline">{t("finances.chartBtn")}</span>
+                  <ChevronDown
+                    className={cn(
+                      "h-3.5 w-3.5 transition-transform",
+                      showChart && "rotate-180",
+                    )}
+                  />
+                </button>
+              )}
+
+              <button
+                type="button"
+                disabled={!activeEspaceId}
+                onClick={openCreateForActiveTab}
+                className={cn(
+                  "apple-press inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-2xl px-4 text-sm font-semibold text-white shadow-md transition-all disabled:opacity-50 sm:flex-initial",
+                  sectionMeta.ctaClass,
+                )}
+              >
+                <Plus className="h-4 w-4" />
+                {ctaLabel}
               </button>
-            );
-          })}
+            </div>
+          </div>
         </div>
+
+        {/* Synthèse contextuelle dédiée à l'onglet actif */}
+        {activeTab !== "contacts" &&
+          (isKpiLoading ? (
+            <FinanceKpiSkeleton />
+          ) : (
+            <>
+              <FinanceContextSummary
+                activeTab={activeTab}
+                totalRevenus={totalRevenus}
+                revenusCount={revenusQuery.data?.data.length ?? 0}
+                totalDepenses={totalDepenses}
+                depensesCount={depensesQuery.data?.data.length ?? 0}
+                dettesResume={dettesResume.data}
+                creancesResume={creancesResume.data}
+              />
+              <AnimatePresence initial={false}>
+                {showChart && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <CashFlowChart
+                      totalRevenus={totalRevenus}
+                      totalDepenses={totalDepenses}
+                      totalCreancesRestant={
+                        creancesResume.data?.totalRestant ?? 0
+                      }
+                      totalDettesRestant={dettesResume.data?.totalRestant ?? 0}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </>
+          ))}
 
         {/* Filtres & Pagination */}
-        <FinanceFiltersBar
-          du={du}
-          au={au}
-          tri={tri}
-          ordre={ordre}
-          showStatutFilter={activeTab === "dettes" || activeTab === "creances"}
-          statut={statut}
-          page={activeMeta?.page ?? page}
-          totalPages={
-            activeMeta
-              ? Math.max(1, Math.ceil(activeMeta.total / activeMeta.limit))
-              : 1
-          }
-          totalItems={activeMeta?.total ?? 0}
-          onDuChange={(val) => {
-            setDu(val);
-            setPage(1);
-          }}
-          onAuChange={(val) => {
-            setAu(val);
-            setPage(1);
-          }}
-          onTriChange={(val) => {
-            setTri(val);
-            setPage(1);
-          }}
-          onToggleOrdre={() => {
-            setOrdre((prev) => (prev === "desc" ? "asc" : "desc"));
-            setPage(1);
-          }}
-          onStatutChange={(val) => {
-            setStatut(val);
-            setPage(1);
-          }}
-          onPageChange={setPage}
-          onReset={handleResetFilters}
-        />
+        {activeTab !== "contacts" && (
+          <FinanceFiltersBar
+            du={du}
+            au={au}
+            tri={tri}
+            ordre={ordre}
+            showStatutFilter={activeTab === "dettes" || activeTab === "creances"}
+            statut={statut}
+            page={activeMeta?.page ?? page}
+            totalPages={
+              activeMeta
+                ? Math.max(1, Math.ceil(activeMeta.total / activeMeta.limit))
+                : 1
+            }
+            totalItems={activeMeta?.total ?? 0}
+            onDuChange={(val) => {
+              setDu(val);
+              setPage(1);
+            }}
+            onAuChange={(val) => {
+              setAu(val);
+              setPage(1);
+            }}
+            onTriChange={(val) => {
+              setTri(val);
+              setPage(1);
+            }}
+            onToggleOrdre={() => {
+              setOrdre((prev) => (prev === "desc" ? "asc" : "desc"));
+              setPage(1);
+            }}
+            onStatutChange={(val) => {
+              setStatut(val);
+              setPage(1);
+            }}
+            onPageChange={setPage}
+            onReset={handleResetFilters}
+          />
+        )}
 
         {/* Liste active */}
         <AnimatePresence mode="wait">
@@ -494,18 +558,24 @@ export function FinanceView() {
             )}
 
             {activeTab === "depenses" && (
-              <TransactionList
-                kind="depense"
-                items={depensesQuery.data?.data ?? []}
-                isLoading={depensesQuery.isLoading}
-                onCreate={openCreateForActiveTab}
-                onEdit={(item) =>
-                  setTxModal({ open: true, kind: "depense", item })
-                }
-                onDelete={(item) =>
-                  setDeleteTarget({ kind: "depense", item: item as Depense })
-                }
-              />
+              <>
+                <CategoryBudgetsCard
+                  espaceId={activeEspaceId}
+                  budgets={financesResume.data?.budgets ?? []}
+                />
+                <TransactionList
+                  kind="depense"
+                  items={depensesQuery.data?.data ?? []}
+                  isLoading={depensesQuery.isLoading}
+                  onCreate={openCreateForActiveTab}
+                  onEdit={(item) =>
+                    setTxModal({ open: true, kind: "depense", item })
+                  }
+                  onDelete={(item) =>
+                    setDeleteTarget({ kind: "depense", item: item as Depense })
+                  }
+                />
+              </>
             )}
 
             {activeTab === "dettes" && (
@@ -543,6 +613,10 @@ export function FinanceView() {
                   setDeleteTarget({ kind: "creance", item: item as Creance })
                 }
               />
+            )}
+
+            {activeTab === "contacts" && (
+              <ContactsSection createOpenSignal={contactCreateSignal} />
             )}
           </motion.div>
         </AnimatePresence>

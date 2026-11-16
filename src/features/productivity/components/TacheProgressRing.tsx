@@ -1,4 +1,5 @@
 import { motion } from "motion/react";
+import { useTranslation } from "react-i18next";
 
 /** Propriétés de l'anneau de progression des tâches. */
 export interface TacheProgressRingProps {
@@ -12,6 +13,7 @@ export interface TacheProgressRingProps {
  * Anneau SVG léger et animé affichant le taux d'accomplissement des tâches.
  */
 export function TacheProgressRing({ completed, total }: TacheProgressRingProps) {
+  const { t } = useTranslation();
   const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
   const radius = 32;
   const circumference = 2 * Math.PI * radius;
@@ -55,15 +57,15 @@ export function TacheProgressRing({ completed, total }: TacheProgressRingProps) 
 
       <div className="min-w-0">
         <p className="text-xs font-medium uppercase tracking-wider text-[var(--text-secondary)]">
-          Avancement global
+          {t("projetsExtra.ring.globalProgress")}
         </p>
         <p className="mt-0.5 text-base font-semibold text-[var(--text-primary)] tabular-nums">
-          {completed} / {total} tâche{total > 1 ? "s" : ""} complétée{completed > 1 ? "s" : ""}
+          {t("projetsExtra.ring.tasksCompletedRatio", { completed, total })}
         </p>
         <p className="mt-0.5 text-xs text-[var(--text-secondary)]">
           {percent === 100 && total > 0
-            ? "Toutes les tâches de cette liste sont terminées."
-            : "Cochez une tâche pour mettre à jour votre progression."}
+            ? t("projetsExtra.ring.allDone")
+            : t("projetsExtra.ring.checkToUpdate")}
         </p>
       </div>
     </motion.div>

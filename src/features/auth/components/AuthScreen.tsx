@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
+import { useTranslation } from "react-i18next";
 import {
   ArrowRight,
   Eye,
@@ -33,6 +34,7 @@ import { GoogleSignInButton } from "./GoogleSignInButton";
 type AuthView = "login" | "register" | "verify" | "forgot";
 
 export const AuthScreen: React.FC = () => {
+  const { t } = useTranslation();
   const { resolvedTheme, toggleTheme } = useTheme();
   const loginMutation = useLoginMutation();
   const registerMutation = useRegisterMutation();
@@ -162,7 +164,7 @@ export const AuthScreen: React.FC = () => {
                 Productivity
               </h1>
               <p className="text-xs text-muted-foreground">
-                Finances, projets et idées dans un seul espace
+                {t("auth.appTagline")}
               </p>
             </div>
           </motion.div>
@@ -210,7 +212,7 @@ export const AuthScreen: React.FC = () => {
                           className="absolute inset-0 -z-10 rounded-xl bg-card shadow-xs"
                         />
                       )}
-                      {tab === "login" ? "Connexion" : "Inscription"}
+                      {tab === "login" ? t("auth.loginTab") : t("auth.registerTab")}
                     </button>
                   );
                 })}
@@ -241,7 +243,7 @@ export const AuthScreen: React.FC = () => {
                 >
                   <div className="space-y-1.5">
                     <label className="text-xs font-medium text-foreground block">
-                      Adresse email
+                      {t("auth.email")}
                     </label>
                     <div className="relative">
                       <Mail className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -265,7 +267,7 @@ export const AuthScreen: React.FC = () => {
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
                       <label className="text-xs font-medium text-foreground">
-                        Mot de passe
+                        {t("auth.password")}
                       </label>
                       <button
                         type="button"
@@ -275,7 +277,7 @@ export const AuthScreen: React.FC = () => {
                         }}
                         className="text-[11px] font-medium text-primary hover:underline"
                       >
-                        Oublié ?
+                        {t("auth.forgotShort")}
                       </button>
                     </div>
                     <div className="relative">
@@ -328,7 +330,7 @@ export const AuthScreen: React.FC = () => {
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
                       <>
-                        Se connecter
+                        {t("auth.signIn")}
                         <ArrowRight className="h-4 w-4" />
                       </>
                     )}
@@ -349,7 +351,7 @@ export const AuthScreen: React.FC = () => {
                 >
                   <div className="space-y-1.5">
                     <label className="text-xs font-medium text-foreground block">
-                      Nom complet
+                      {t("auth.fullName")}
                     </label>
                     <div className="relative">
                       <User className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -372,7 +374,7 @@ export const AuthScreen: React.FC = () => {
 
                   <div className="space-y-1.5">
                     <label className="text-xs font-medium text-foreground block">
-                      Adresse email
+                      {t("auth.email")}
                     </label>
                     <div className="relative">
                       <Mail className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -395,7 +397,7 @@ export const AuthScreen: React.FC = () => {
 
                   <div className="space-y-1.5">
                     <label className="text-xs font-medium text-foreground block">
-                      Mot de passe
+                      {t("auth.password")}
                     </label>
                     <div className="relative">
                       <Lock className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -450,7 +452,7 @@ export const AuthScreen: React.FC = () => {
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
                       <>
-                        Créer mon compte
+                        {t("auth.signUp")}
                         <ArrowRight className="h-4 w-4" />
                       </>
                     )}
@@ -463,7 +465,7 @@ export const AuthScreen: React.FC = () => {
                   key="verify"
                   email={email.trim()}
                   onVerified={() => {
-                    setBanner("Email vérifié. Connectez-vous pour continuer.");
+                    setBanner(t("auth.emailVerifiedBanner"));
                     setView("login");
                   }}
                   onBack={() => setView("login")}
@@ -475,7 +477,7 @@ export const AuthScreen: React.FC = () => {
                   key="forgot"
                   initialEmail={email.trim()}
                   onResetSuccess={() => {
-                    setBanner("Mot de passe réinitialisé. Connectez-vous.");
+                    setBanner(t("auth.passwordResetBanner"));
                     setView("login");
                   }}
                   onBack={() => setView("login")}
@@ -488,7 +490,7 @@ export const AuthScreen: React.FC = () => {
                 <div className="relative flex items-center">
                   <div className="flex-grow border-t border-border/80" />
                   <span className="mx-3 shrink-0 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                    ou
+                    {t("auth.or")}
                   </span>
                   <div className="flex-grow border-t border-border/80" />
                 </div>

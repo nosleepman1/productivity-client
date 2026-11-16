@@ -1,11 +1,18 @@
 import { useState, type FormEvent } from "react";
-import { X } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { BellRing, CalendarPlus, CheckCircle2, FolderKanban } from "lucide-react";
+import {
+  FORM_INPUT_CLASS,
+  FORM_TEXTAREA_CLASS,
+  FormActions,
+  FormField,
+  FormSheet,
+} from "@/components/ui/FormSheet";
 import { toDateInputValue } from "@/features/finances/utils/format";
 import {
   projetFormSchema,
   toCreateProjetDto,
 } from "@/features/productivity/schemas/projet.schema";
+import { cn } from "@/lib/utils";
 import type { CreateProjetDto, Projet } from "@/types/productivity";
 
 /** Propriétés de la modale de création/édition de projet. */
@@ -41,10 +48,20 @@ function ProjetInnerForm({
   const [dateFin, setDateFin] = useState(
     initialData?.dateFin ? toDateInputValue(initialData.dateFin) : "",
   );
+  const [rappelActif, setRappelActif] = useState(
+    initialData?.rappelActif ?? false,
+  );
+  const [syncCalendrier, setSyncCalendrier] = useState(
+    initialData?.syncCalendrier ?? false,
+  );
   const [estTermine, setEstTermine] = useState(
     initialData?.estTermine ?? false,
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const totalTaches = initialData?.taches?.length ?? 0;
+  const tachesTerminees =
+    initialData?.taches?.filter((t) => t.estTerminee).length ?? 0;
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -53,6 +70,8 @@ function ProjetInnerForm({
       description,
       dateDebut,
       dateFin,
+      rappelActif,
+      syncCalendrier,
       estTermine,
     });
 
@@ -67,18 +86,17 @@ function ProjetInnerForm({
     }
 
     setErrors({});
-    onSubmit(toCreateProjetDto(result.data));
+    onSubmit(toCreateProjetDto(result.data, isEditing));
   };
 
   return (
-    <form onSubmit={handleSubmit} className="mt-5 space-y-4">
-      <div>
-        <label
-          htmlFor="projet-titre"
-          className="mb-1.5 block text-xs font-medium text-[var(--text-secondary)]"
-        >
-          Titre du projet
-        </label>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <FormField
+        htmlFor="projet-titre"
+        label="Titre du projet"
+        required
+        error={errors.titre}
+      >
         <input
           id="projet-titre"
           type="text"
@@ -86,21 +104,16 @@ function ProjetInnerForm({
           placeholder="Ex : Refonte application mobile"
           value={titre}
           onChange={(e) => setTitre(e.target.value)}
-          className="min-h-[44px] w-full rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-3.5 text-sm font-medium text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
-          autoFocus
+          className={cn(FORM_INPUT_CLASS, "font-medium")}
         />
-        {errors.titre && (
-          <p className="mt-1 text-xs text-rose-500">{errors.titre}</p>
-        )}
-      </div>
+      </FormField>
 
-      <div>
-        <label
-          htmlFor="projet-description"
-          className="mb-1.5 block text-xs font-medium text-[var(--text-secondary)]"
-        >
-          Description
-        </label>
+      <FormField
+        htmlFor="projet-description"
+        label="Description"
+        hint="Optionnelle"
+        error={errors.description}
+      >
         <textarea
           id="projet-description"
           rows={3}
@@ -108,92 +121,129 @@ function ProjetInnerForm({
           placeholder="Objectifs clés, livrables, contexte..."
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="w-full rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-subtle)] p-3.5 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
+          className={FORM_TEXTAREA_CLASS}
         />
-        {errors.description && (
-          <p className="mt-1 text-xs text-rose-500">{errors.description}</p>
-        )}
-      </div>
+      </FormField>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <div>
-          <label
-            htmlFor="projet-debut"
-            className="mb-1.5 block text-xs font-medium text-[var(--text-secondary)]"
-          >
-            Date de début
-          </label>
+        <FormField
+          htmlFor="projet-debut"
+          label="Date de début"
+          required
+          error={errors.dateDebut}
+        >
           <input
             id="projet-debut"
             type="date"
             value={dateDebut}
             onChange={(e) => setDateDebut(e.target.value)}
-            className="min-h-[44px] w-full rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-3.5 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
+            className={cn(FORM_INPUT_CLASS, "tabular-nums")}
           />
-          {errors.dateDebut && (
-            <p className="mt-1 text-xs text-rose-500">{errors.dateDebut}</p>
-          )}
-        </div>
+        </FormField>
 
-        <div>
-          <label
-            htmlFor="projet-fin"
-            className="mb-1.5 block text-xs font-medium text-[var(--text-secondary)]"
-          >
-            Date de fin (optionnelle)
-          </label>
+        <FormField
+          htmlFor="projet-fin"
+          label="Échéance prévue"
+          hint="Optionnelle"
+          error={errors.dateFin}
+        >
           <input
             id="projet-fin"
             type="date"
             value={dateFin}
             onChange={(e) => setDateFin(e.target.value)}
-            className="min-h-[44px] w-full rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-3.5 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
+            className={cn(FORM_INPUT_CLASS, "tabular-nums")}
           />
-          {errors.dateFin && (
-            <p className="mt-1 text-xs text-rose-500">{errors.dateFin}</p>
-          )}
-        </div>
+        </FormField>
       </div>
 
-      <label className="flex min-h-[44px] cursor-pointer items-center gap-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-3.5">
-        <input
-          type="checkbox"
-          checked={estTermine}
-          onChange={(e) => setEstTermine(e.target.checked)}
-          className="h-4 w-4 accent-[var(--accent)]"
-        />
-        <span className="text-sm font-medium text-[var(--text-primary)]">
-          Marquer comme terminé
-        </span>
-      </label>
-
-      <div className="flex items-center justify-end gap-2.5 pt-2">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <button
           type="button"
-          onClick={onClose}
-          disabled={isPending}
-          className="apple-press min-h-[44px] rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-4 text-sm font-medium text-[var(--text-primary)]"
+          onClick={() => setRappelActif((v) => !v)}
+          aria-pressed={rappelActif}
+          className={cn(
+            "apple-press flex items-center justify-between rounded-2xl border px-3.5 py-2.5 text-left transition-colors",
+            rappelActif
+              ? "border-indigo-500/40 bg-indigo-500/10 text-indigo-700 dark:text-indigo-300"
+              : "border-[var(--border)] bg-[var(--background)] text-[var(--muted-foreground)]",
+          )}
         >
-          Annuler
+          <div className="min-w-0 pr-2">
+            <p className="text-xs font-semibold">Rappels d'échéance</p>
+            <p className="text-[10px] opacity-80 truncate">
+              Alertes avant la date de fin
+            </p>
+          </div>
+          <BellRing className="h-4 w-4 shrink-0" />
         </button>
+
         <button
-          type="submit"
-          disabled={isPending}
-          className="apple-press min-h-[44px] rounded-xl bg-[var(--accent)] px-5 text-sm font-semibold text-white shadow-sm disabled:opacity-50"
+          type="button"
+          onClick={() => setSyncCalendrier((v) => !v)}
+          aria-pressed={syncCalendrier}
+          className={cn(
+            "apple-press flex items-center justify-between rounded-2xl border px-3.5 py-2.5 text-left transition-colors",
+            syncCalendrier
+              ? "border-sky-500/40 bg-sky-500/10 text-sky-700 dark:text-sky-300"
+              : "border-[var(--border)] bg-[var(--background)] text-[var(--muted-foreground)]",
+          )}
         >
-          {isPending
-            ? "Enregistrement..."
-            : isEditing
-              ? "Mettre à jour"
-              : "Créer le projet"}
+          <div className="min-w-0 pr-2">
+            <p className="text-xs font-semibold">Planifier dans l'agenda</p>
+            <p className="text-[10px] opacity-80 truncate">
+              Sync Google / Apple Calendar
+            </p>
+          </div>
+          <CalendarPlus className="h-4 w-4 shrink-0" />
         </button>
       </div>
+
+      <button
+        type="button"
+        onClick={() =>
+          setEstTermine((v) => {
+            const next = !v;
+            if (next) setRappelActif(false);
+            return next;
+          })
+        }
+        aria-pressed={estTermine}
+        className={cn(
+          "apple-press flex min-h-[48px] w-full items-center justify-between rounded-2xl border px-4 text-left transition-colors",
+          estTermine
+            ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+            : "border-[var(--border)] bg-[var(--background)] text-[var(--foreground)]",
+        )}
+      >
+        <div>
+          <span className="text-sm font-medium">Marquer comme terminé</span>
+          {isEditing && totalTaches > 0 && (
+            <p className="text-[11px] opacity-80">
+              {tachesTerminees}/{totalTaches} tâche(s) terminée(s)
+            </p>
+          )}
+        </div>
+        <CheckCircle2
+          className={cn(
+            "h-5 w-5 transition-opacity",
+            estTermine ? "opacity-100" : "opacity-30",
+          )}
+        />
+      </button>
+
+      <FormActions
+        submitLabel={isEditing ? "Enregistrer" : "Créer le projet"}
+        isPending={isPending}
+        accent="indigo"
+        onCancel={onClose}
+      />
     </form>
   );
 }
 
 /**
- * Modale Apple-style pour créer ou modifier un projet avec validation Zod.
+ * Modale mobile-first pour créer ou modifier un projet avec validation Zod.
  */
 export function ProjetFormModal({
   open,
@@ -205,58 +255,24 @@ export function ProjetFormModal({
   const isEditing = Boolean(initialData);
 
   return (
-    <AnimatePresence>
-      {open && (
-        <div
-          className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="projet-modal-title"
-        >
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
-            onClick={isPending ? undefined : onClose}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm"
-          />
-
-          <motion.div
-            initial={{ opacity: 0, y: 28, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 18, scale: 0.97 }}
-            transition={{ type: "spring", stiffness: 380, damping: 30 }}
-            className="apple-surface relative z-10 max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl p-6 shadow-2xl sm:rounded-3xl"
-          >
-            <div className="flex items-center justify-between">
-              <h2
-                id="projet-modal-title"
-                className="text-lg font-semibold text-[var(--text-primary)]"
-              >
-                {isEditing ? "Modifier le projet" : "Nouveau projet"}
-              </h2>
-              <button
-                type="button"
-                onClick={onClose}
-                disabled={isPending}
-                aria-label="Fermer"
-                className="apple-press flex h-9 w-9 items-center justify-center rounded-full text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)]"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-
-            <ProjetInnerForm
-              key={initialData?.id ?? "new-projet"}
-              initialData={initialData}
-              isPending={isPending}
-              onClose={onClose}
-              onSubmit={onSubmit}
-            />
-          </motion.div>
-        </div>
-      )}
-    </AnimatePresence>
+    <FormSheet
+      open={open}
+      titleId="projet-modal-title"
+      title={isEditing ? "Modifier le projet" : "Nouveau projet"}
+      subtitle="Planifiez vos jalons et suivez votre avancement"
+      icon={<FolderKanban className="h-5 w-5" />}
+      accent="indigo"
+      size="lg"
+      isPending={isPending}
+      onClose={onClose}
+    >
+      <ProjetInnerForm
+        key={initialData?.id ?? "new-projet"}
+        initialData={initialData}
+        isPending={isPending}
+        onClose={onClose}
+        onSubmit={onSubmit}
+      />
+    </FormSheet>
   );
 }

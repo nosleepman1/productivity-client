@@ -85,6 +85,24 @@ export function useUpdateTacheMutation(espaceId: string | null) {
       if (!espaceId) throw new Error("Aucun espace actif sélectionné.");
       return tachesService.update(espaceId, id, dto);
     },
+    onMutate: async ({ id, dto }) => {
+      if (!espaceId || dto.estTerminee === undefined) return {};
+      const keyPrefix = tacheKeys.all(espaceId);
+      await queryClient.cancelQueries({ queryKey: keyPrefix });
+      const snapshots = queryClient.getQueriesData<{ data: Array<{ id: string; estTerminee: boolean }> }>({
+        queryKey: keyPrefix,
+      });
+      for (const [queryKey, oldData] of snapshots) {
+        if (!oldData?.data) continue;
+        queryClient.setQueryData(queryKey, {
+          ...oldData,
+          data: oldData.data.map((t) =>
+            t.id === id ? { ...t, estTerminee: dto.estTerminee } : t,
+          ),
+        });
+      }
+      return { snapshots };
+    },
     onSuccess: (updated) => {
       if (espaceId) {
         void queryClient.invalidateQueries({
@@ -96,7 +114,12 @@ export function useUpdateTacheMutation(espaceId: string | null) {
         updated.titre,
       );
     },
-    onError: (err) => {
+    onError: (err, _vars, context) => {
+      if (context?.snapshots) {
+        for (const [queryKey, oldData] of context.snapshots) {
+          queryClient.setQueryData(queryKey, oldData);
+        }
+      }
       toast.error("Mise à jour impossible", getApiErrorMessage(err));
     },
   });
