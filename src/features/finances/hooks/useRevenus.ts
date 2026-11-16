@@ -63,6 +63,9 @@ export function useCreateRevenuMutation(espaceId: string | null) {
         void queryClient.invalidateQueries({
           queryKey: revenuKeys.all(espaceId),
         });
+        void queryClient.invalidateQueries({
+          queryKey: ["finances", "resume", espaceId],
+        });
       }
       toast.success(
         "Revenu enregistré",
@@ -93,6 +96,9 @@ export function useUpdateRevenuMutation(espaceId: string | null) {
         void queryClient.invalidateQueries({
           queryKey: revenuKeys.all(espaceId),
         });
+        void queryClient.invalidateQueries({
+          queryKey: ["finances", "resume", espaceId],
+        });
       }
       toast.success("Revenu modifié", updated.description);
     },
@@ -119,6 +125,9 @@ export function useDeleteRevenuMutation(espaceId: string | null) {
       if (espaceId) {
         void queryClient.invalidateQueries({
           queryKey: revenuKeys.all(espaceId),
+        });
+        void queryClient.invalidateQueries({
+          queryKey: ["finances", "resume", espaceId],
         });
       }
       toast.info("Revenu supprimé");

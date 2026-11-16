@@ -63,6 +63,12 @@ export function useCreateDepenseMutation(espaceId: string | null) {
         void queryClient.invalidateQueries({
           queryKey: depenseKeys.all(espaceId),
         });
+        void queryClient.invalidateQueries({
+          queryKey: ["finances", "resume", espaceId],
+        });
+        void queryClient.invalidateQueries({
+          queryKey: ["notifications", "in-app"],
+        });
       }
       toast.success(
         "Dépense enregistrée",
@@ -93,6 +99,12 @@ export function useUpdateDepenseMutation(espaceId: string | null) {
         void queryClient.invalidateQueries({
           queryKey: depenseKeys.all(espaceId),
         });
+        void queryClient.invalidateQueries({
+          queryKey: ["finances", "resume", espaceId],
+        });
+        void queryClient.invalidateQueries({
+          queryKey: ["notifications", "in-app"],
+        });
       }
       toast.success("Dépense modifiée", updated.description);
     },
@@ -119,6 +131,12 @@ export function useDeleteDepenseMutation(espaceId: string | null) {
       if (espaceId) {
         void queryClient.invalidateQueries({
           queryKey: depenseKeys.all(espaceId),
+        });
+        void queryClient.invalidateQueries({
+          queryKey: ["finances", "resume", espaceId],
+        });
+        void queryClient.invalidateQueries({
+          queryKey: ["notifications", "in-app"],
         });
       }
       toast.info("Dépense supprimée");
