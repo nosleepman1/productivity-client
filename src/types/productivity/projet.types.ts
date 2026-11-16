@@ -8,6 +8,15 @@ export interface Projet {
   dateDebut: string;
   dateFin: string | null;
   estTermine: boolean;
+  rappelActif?: boolean;
+  syncCalendrier?: boolean;
+  taches?: {
+    id: string;
+    titre: string;
+    estTerminee: boolean;
+    dateLimite: string;
+    priorite?: string;
+  }[];
   espaceId: string;
   createdAt: string;
   updatedAt: string;
@@ -16,10 +25,12 @@ export interface Projet {
 /** Données requises pour créer un projet. */
 export interface CreateProjetDto {
   titre: string;
-  description: string;
+  description?: string;
   dateDebut: string;
-  dateFin?: string;
+  dateFin?: string | null;
   estTermine?: boolean;
+  rappelActif?: boolean;
+  syncCalendrier?: boolean;
 }
 
 /** Données pour modifier partiellement un projet. */

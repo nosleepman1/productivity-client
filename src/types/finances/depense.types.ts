@@ -3,6 +3,10 @@ export interface Depense {
   id: string;
   montant: number;
   description: string;
+  categorie?: string;
+  moyenPaiement?: string;
+  projetId?: string | null;
+  projet?: { id: string; titre: string } | null;
   date: string;
   espaceId: string;
   createdAt: string;
@@ -13,6 +17,9 @@ export interface Depense {
 export interface CreateDepenseDto {
   montant: number;
   description: string;
+  categorie?: string;
+  moyenPaiement?: string;
+  projetId?: string | null;
   date?: string;
 }
 
