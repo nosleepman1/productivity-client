@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { AppRoutes } from "./routes/AppRoutes";
 import { ToastContainer } from "./components/ui/ToastContainer";
+import { PwaUpdatePrompt } from "./components/ui/PwaUpdatePrompt";
 import { useLogoutMutation } from "./features/auth/hooks/useAuth";
 import { useActiveEspace } from "./features/espaces/hooks/useEspaces";
 import { useTaches } from "./features/productivity/hooks/useTaches";
@@ -287,6 +288,7 @@ export default function App() {
   return (
     <ThemeProvider>
       <ToastContainer />
+      <PwaUpdatePrompt />
       <AppRoutes dashboard={<ProductivityApp />} />
     </ThemeProvider>
   );

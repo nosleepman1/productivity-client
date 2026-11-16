@@ -5,9 +5,11 @@ import { NetworkFirst } from "workbox-strategies";
 
 declare let self: ServiceWorkerGlobalScope;
 
-// Force l'activation immédiate du nouveau Service Worker (remplace l'ancien cache Workbox)
-self.addEventListener("install", () => {
-  void self.skipWaiting();
+// Activation sur demande de l'utilisateur via la bannière de mise à jour (SKIP_WAITING)
+self.addEventListener("message", (event) => {
+  if (event.data && (event.data as { type?: string }).type === "SKIP_WAITING") {
+    void self.skipWaiting();
+  }
 });
 
 self.addEventListener("activate", (event) => {
