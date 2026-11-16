@@ -10,6 +10,9 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
+      strategies: "injectManifest",
+      srcDir: "src",
+      filename: "sw.ts",
       registerType: "autoUpdate",
       includeAssets: ["favicon.svg", "apple-touch-icon.png"],
       manifest: {
@@ -43,9 +46,13 @@ export default defineConfig({
           },
         ],
       },
-      workbox: {
+      injectManifest: {
         globPatterns: ["**/*.{js,css,html,svg,png,woff2}"],
-        navigateFallbackDenylist: [/^\/api\//],
+      },
+      devOptions: {
+        enabled: true,
+        type: "module",
+        navigateFallback: "index.html",
       },
     }),
   ],
@@ -55,6 +62,17 @@ export default defineConfig({
     },
   },
   server: {
+    allowedHosts: true,
+    proxy: {
+      "/api": {
+        target: "http://localhost:3000",
+        changeOrigin: true,
+      },
+    },
+  },
+  preview: {
+    port: 5173,
+    allowedHosts: true,
     proxy: {
       "/api": {
         target: "http://localhost:3000",
