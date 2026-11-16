@@ -10,6 +10,7 @@ export interface IaProviderInfo {
 }
 
 export interface IaStatusResponse {
+  aiName?: string;
   defaultProvider: IaProviderId;
   providers: IaProviderInfo[];
   quota?: AiQuotaStatus;
@@ -74,6 +75,11 @@ export interface IaConversationDetail extends IaConversationSummary {
 }
 
 export const iaApi = {
+  getConfig: async (): Promise<{ aiName: string }> => {
+    const { data } = await api.get<{ aiName: string }>("/ia/config");
+    return data;
+  },
+
   getStatus: async (espaceId: string): Promise<IaStatusResponse> => {
     const { data } = await api.get<IaStatusResponse>(
       `/espaces/${espaceId}/ia/status`,

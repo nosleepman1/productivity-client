@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import type { FinanceTab } from "@/components/views/FinanceView";
 import type { ProjetsSubTab } from "@/components/views/ProjetsView";
+import { useAiName } from "@/features/ia/hooks/useIa";
 import { cn } from "@/lib/utils";
 
 /**
@@ -420,14 +421,15 @@ function CloseNestedButton({
   onClick,
   onPlusClick,
 }: CloseNestedButtonProps) {
+  const aiName = useAiName();
   return (
     <div className="flex items-center gap-1 pl-1.5 border-l border-slate-200/80 dark:border-slate-800/80">
       {onPlusClick && (
         <button
           type="button"
           onClick={onPlusClick}
-          aria-label="Ndimbeul Bot"
-          title="Ndimbeul Bot"
+          aria-label={aiName}
+          title={aiName}
           className="apple-press flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-600 via-violet-600 to-cyan-500 text-white shadow-sm"
         >
           <BrainCircuit className="h-4.5 w-4.5" />

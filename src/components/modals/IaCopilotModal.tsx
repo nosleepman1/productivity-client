@@ -31,6 +31,7 @@ import {
   type IaProviderId,
 } from "@/features/ia/api/ia.api";
 import {
+  useAiName,
   useIaChatMutation,
   useIaConversations,
   useIaDeleteConversationMutation,
@@ -186,6 +187,7 @@ export const IaCopilotModal: React.FC<IaCopilotModalProps> = ({
 }) => {
   const { t } = useTranslation();
   const { activeEspaceId } = useActiveEspace();
+  const aiName = useAiName();
 
   const statusQuery = useIaStatus(open ? activeEspaceId : null);
   const conversationsQuery = useIaConversations(activeEspaceId, open);
@@ -696,7 +698,7 @@ export const IaCopilotModal: React.FC<IaCopilotModalProps> = ({
                       id="ia-copilot-title"
                       className="truncate text-sm font-semibold tracking-tight text-[var(--foreground)] sm:text-base"
                     >
-                      {t("ia.title")}
+                      {statusQuery.data?.aiName ?? aiName}
                     </h2>
                     <span className="hidden rounded-full border border-[var(--border)] bg-[var(--card)] px-2 py-0.5 text-[10px] font-medium capitalize text-[var(--muted-foreground)] sm:inline-block">
                       {activeProvider}
@@ -1116,7 +1118,8 @@ export const IaCopilotModal: React.FC<IaCopilotModalProps> = ({
                       {quota?.dailyLimit} prompts · {quota?.planNom})
                     </p>
                     <p className="text-[11px] text-[var(--muted-foreground)]">
-                      Passez à un pack supérieur pour continuer avec Ndimbeul Bot.
+                      Passez à un pack supérieur pour continuer avec{" "}
+                      {statusQuery.data?.aiName ?? aiName}.
                     </p>
                   </div>
                   {onOpenSubscriptions && (

@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/store/toast.store";
+import { useAiName } from "@/features/ia/hooks/useIa";
 import type {
   MethodePaiementAbonnement,
   PaiementAbonnement,
@@ -90,6 +91,7 @@ function formatDateShort(iso?: string | null): string {
 }
 
 export const SubscriptionSection: React.FC = () => {
+  const aiName = useAiName();
   const plansQuery = useSubscriptionPlans();
   const mySubQuery = useMySubscription();
   const methodsQuery = usePaymentMethods();
@@ -230,7 +232,7 @@ export const SubscriptionSection: React.FC = () => {
             <div className="flex items-center justify-between text-xs">
               <span className="inline-flex items-center gap-1.5 font-medium text-foreground">
                 <Zap className="h-3.5 w-3.5 text-amber-500" />
-                Quota Ndimbeul Bot aujourd&apos;hui
+                Quota {aiName} aujourd&apos;hui
               </span>
               <span className="font-semibold tabular-nums text-foreground">
                 {quota.usedToday} / {quota.dailyLimit} prompts

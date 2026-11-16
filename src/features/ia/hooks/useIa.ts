@@ -7,12 +7,22 @@ import {
 
 export const iaKeys = {
   all: ["ia"] as const,
+  config: () => [...iaKeys.all, "config"] as const,
   status: (espaceId: string) => [...iaKeys.all, "status", espaceId] as const,
   conversations: (espaceId: string) =>
     [...iaKeys.all, "conversations", espaceId] as const,
   conversation: (espaceId: string, id: string) =>
     [...iaKeys.all, "conversation", espaceId, id] as const,
 };
+
+export function useAiName(): string {
+  const { data } = useQuery({
+    queryKey: iaKeys.config(),
+    queryFn: iaApi.getConfig,
+    staleTime: 60_000,
+  });
+  return data?.aiName?.trim() || "Ndimbeul Bot";
+}
 
 export function useIaStatus(espaceId: string | null) {
   return useQuery({
