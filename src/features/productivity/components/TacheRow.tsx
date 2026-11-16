@@ -1,6 +1,14 @@
-import { CalendarClock, Check, Pencil, Trash2 } from "lucide-react";
+import {
+  CalendarClock,
+  CalendarPlus,
+  Check,
+  FolderKanban,
+  Pencil,
+  Trash2,
+} from "lucide-react";
 import { motion } from "motion/react";
 import { formatDateUtc } from "@/features/finances/utils/format";
+import { buildGoogleCalendarTemplateUrl } from "@/features/productivity/utils/calendar";
 import { getDeadlineBadge } from "@/features/productivity/utils/dates";
 import type { Tache } from "@/types/productivity";
 
@@ -101,9 +109,44 @@ export function TacheRow({
               <CalendarClock className="h-3 w-3" />
               {badge.label}
             </span>
+            {tache.projet && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-indigo-500/12 px-2 py-0.5 text-[11px] font-medium text-indigo-600 dark:text-indigo-300">
+                <FolderKanban className="h-3 w-3" />
+                {tache.projet.titre}
+              </span>
+            )}
+            {tache.priorite && tache.priorite !== "MOYENNE" && (
+              <span
+                className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                  tache.priorite === "URGENTE"
+                    ? "bg-rose-500/15 text-rose-600 dark:text-rose-400"
+                    : tache.priorite === "HAUTE"
+                      ? "bg-amber-500/15 text-amber-600 dark:text-amber-400"
+                      : "bg-slate-500/15 text-slate-500"
+                }`}
+              >
+                {tache.priorite}
+              </span>
+            )}
             <span className="text-[11px] text-[var(--text-secondary)]">
               Échéance : {formatDateUtc(tache.dateLimite)}
             </span>
+            <a
+              href={buildGoogleCalendarTemplateUrl({
+                title: tache.projet
+                  ? `[${tache.projet.titre}] ${tache.titre}`
+                  : tache.titre,
+                description: tache.description,
+                startDate: tache.dateLimite,
+              })}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 rounded-full bg-sky-500/10 px-2 py-0.5 text-[10px] font-semibold text-sky-600 hover:bg-sky-500/20 dark:text-sky-400"
+              title="Ajouter cette tâche à Google Calendar"
+            >
+              <CalendarPlus className="h-3 w-3" />
+              Agenda
+            </a>
           </div>
         </div>
       </div>

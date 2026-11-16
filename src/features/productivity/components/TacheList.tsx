@@ -1,5 +1,6 @@
 import { CheckSquare, Plus } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
+import { useTranslation } from "react-i18next";
 import type { Tache } from "@/types/productivity";
 import { ProductivityListSkeleton } from "./ProductivitySkeletons";
 import { TacheRow } from "./TacheRow";
@@ -31,6 +32,7 @@ export function TacheList({
   onEdit,
   onDelete,
 }: TacheListProps) {
+  const { t } = useTranslation();
   if (isLoading) {
     return <ProductivityListSkeleton count={4} />;
   }
@@ -46,11 +48,10 @@ export function TacheList({
           <CheckSquare className="h-6 w-6" />
         </div>
         <h3 className="mt-4 text-base font-semibold text-[var(--text-primary)]">
-          Aucune tâche dans cette liste
+          {t("projetsExtra.empty.noTaskTitle")}
         </h3>
         <p className="mt-1 max-w-sm text-sm text-[var(--text-secondary)]">
-          Ajoutez vos prochaines actions avec une date limite pour suivre
-          facilement votre progression.
+          {t("projetsExtra.empty.noTaskDesc")}
         </p>
         <button
           type="button"
@@ -58,7 +59,7 @@ export function TacheList({
           className="apple-press mt-5 inline-flex min-h-[44px] items-center gap-2 rounded-xl bg-[var(--accent)] px-4 text-sm font-semibold text-white shadow-sm"
         >
           <Plus className="h-4 w-4" />
-          Nouvelle tâche
+          {t("projets.newTask")}
         </button>
       </motion.div>
     );
