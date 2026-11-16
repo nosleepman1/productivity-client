@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { setAppLanguage } from "@/i18n";
 import { profilService } from "@/services";
 import { useAuthStore } from "@/store/auth.store";
 import type { UpdateProfilDto } from "@/types/auth";
@@ -13,7 +14,13 @@ export function useProfil() {
 
   return useQuery({
     queryKey: profilKeys.me(),
-    queryFn: () => profilService.getMyProfil(),
+    queryFn: async () => {
+      const profil = await profilService.getMyProfil();
+      if (profil?.langue) {
+        setAppLanguage(profil.langue);
+      }
+      return profil;
+    },
     enabled: isAuthenticated,
   });
 }
@@ -26,6 +33,9 @@ export function useUpdateProfilMutation() {
       profilService.updateMyProfil(payload),
     onSuccess: (updatedProfil) => {
       queryClient.setQueryData(profilKeys.me(), updatedProfil);
+      if (updatedProfil?.langue) {
+        setAppLanguage(updatedProfil.langue);
+      }
     },
   });
 }
