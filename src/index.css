@@ -1,0 +1,384 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/geist";
+
+@custom-variant dark (&:is(.dark, .dark *));
+
+@theme inline {
+  --font-heading: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Geist Variable", system-ui, sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Geist Variable", system-ui, "Segoe UI", Roboto, sans-serif;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+
+  /* Productivity Domain Accents */
+  --color-finance: var(--finance);
+  --color-finance-foreground: var(--finance-foreground);
+  --color-project: var(--project);
+  --color-project-foreground: var(--project-foreground);
+  --color-idea: var(--idea);
+  --color-idea-foreground: var(--idea-foreground);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.35);
+  --radius-2xl: calc(var(--radius) * 1.75);
+  --radius-3xl: calc(var(--radius) * 2.15);
+  --radius-4xl: calc(var(--radius) * 2.5);
+}
+
+/* ============================================================================
+   THÈME 1 : CUPERTINO PAPER & INK (Apple Notes / Things 3 / Reminders)
+   Clarté éditoriale, surfaces pures, contraste élevé, fatigue visuelle minimale
+   ============================================================================ */
+:root,
+:root[data-theme-preset="cupertino"] {
+  color-scheme: light;
+  --background: oklch(0.968 0.002 260); /* #F5F5F7 Apple System Gray 6 */
+  --foreground: oklch(0.21 0.006 260);  /* #1D1D1F Apple Label */
+
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.21 0.006 260);
+
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.21 0.006 260);
+
+  /* Apple System Blue (#007AFF) */
+  --primary: oklch(0.58 0.215 256);
+  --primary-foreground: oklch(0.99 0 0);
+
+  --secondary: oklch(0.945 0.004 260);
+  --secondary-foreground: oklch(0.25 0.01 260);
+
+  --muted: oklch(0.945 0.004 260);
+  --muted-foreground: oklch(0.52 0.01 260); /* #6E6E73 */
+
+  --accent: oklch(0.935 0.012 256);
+  --accent-foreground: oklch(0.45 0.17 256);
+
+  /* Apple System Red (#FF3B30) */
+  --destructive: oklch(0.61 0.23 27);
+  --destructive-foreground: oklch(0.99 0 0);
+
+  --border: oklch(0.89 0.004 260);
+  --input: oklch(0.89 0.004 260);
+  --ring: oklch(0.58 0.215 256 / 45%);
+
+  /* Apple HIG Domain Semantics */
+  --finance: oklch(0.64 0.185 148); /* Apple Green #34C759 */
+  --finance-foreground: oklch(0.99 0 0);
+  --project: oklch(0.54 0.21 277);  /* Apple Indigo #5856D6 */
+  --project-foreground: oklch(0.99 0 0);
+  --idea: oklch(0.75 0.175 68);     /* Apple Orange #FF9500 */
+  --idea-foreground: oklch(0.22 0.04 68);
+
+  --chart-1: oklch(0.58 0.215 256);
+  --chart-2: oklch(0.64 0.185 148);
+  --chart-3: oklch(0.75 0.175 68);
+  --chart-4: oklch(0.54 0.21 277);
+  --chart-5: oklch(0.62 0.17 210);
+
+  --radius: 0.875rem;
+  --glass-bg: rgba(255, 255, 255, 0.82);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --surface-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.03);
+
+  --sidebar: oklch(0.968 0.002 260);
+  --sidebar-foreground: oklch(0.21 0.006 260);
+  --sidebar-primary: oklch(0.58 0.215 256);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.935 0.012 256);
+  --sidebar-accent-foreground: oklch(0.45 0.17 256);
+  --sidebar-border: oklch(0.89 0.004 260);
+  --sidebar-ring: oklch(0.58 0.215 256 / 45%);
+}
+
+.dark,
+.dark[data-theme-preset="cupertino"] {
+  color-scheme: dark;
+  --background: oklch(0 0 0);          /* #000000 True OLED Apple Dark */
+  --foreground: oklch(0.97 0 0);       /* #F5F5F7 */
+
+  --card: oklch(0.225 0 0);            /* #1C1C1E Apple Secondary System BG */
+  --card-foreground: oklch(0.97 0 0);
+
+  --popover: oklch(0.285 0 0);         /* #2C2C2E Apple Tertiary BG */
+  --popover-foreground: oklch(0.97 0 0);
+
+  /* Apple Dark System Blue (#0A84FF) */
+  --primary: oklch(0.64 0.195 253);
+  --primary-foreground: oklch(0.99 0 0);
+
+  --secondary: oklch(0.285 0 0);       /* #2C2C2E */
+  --secondary-foreground: oklch(0.95 0 0);
+
+  --muted: oklch(0.26 0 0);
+  --muted-foreground: oklch(0.68 0 0); /* #98989D */
+
+  --accent: oklch(0.3 0.01 253);
+  --accent-foreground: oklch(0.96 0 0);
+
+  --destructive: oklch(0.65 0.22 27);  /* #FF453A */
+  --destructive-foreground: oklch(0.99 0 0);
+
+  --border: oklch(1 0 0 / 11%);
+  --input: oklch(1 0 0 / 14%);
+  --ring: oklch(0.64 0.195 253 / 45%);
+
+  --finance: oklch(0.71 0.18 148);     /* #30D158 */
+  --finance-foreground: oklch(0.12 0.02 148);
+  --project: oklch(0.66 0.18 275);     /* #5E5CE6 */
+  --project-foreground: oklch(0.99 0 0);
+  --idea: oklch(0.78 0.17 72);         /* #FF9F0A */
+  --idea-foreground: oklch(0.14 0.03 72);
+
+  --chart-1: oklch(0.64 0.195 253);
+  --chart-2: oklch(0.71 0.18 148);
+  --chart-3: oklch(0.78 0.17 72);
+  --chart-4: oklch(0.66 0.18 275);
+  --chart-5: oklch(0.7 0.15 205);
+
+  --glass-bg: rgba(28, 28, 30, 0.82);
+  --glass-border: rgba(255, 255, 255, 0.11);
+  --surface-shadow: 0 1px 2px rgba(0, 0, 0, 0.45), 0 6px 18px rgba(0, 0, 0, 0.28);
+
+  --sidebar: oklch(0.18 0 0);
+  --sidebar-foreground: oklch(0.97 0 0);
+  --sidebar-primary: oklch(0.64 0.195 253);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.285 0 0);
+  --sidebar-accent-foreground: oklch(0.95 0 0);
+  --sidebar-border: oklch(1 0 0 / 11%);
+  --sidebar-ring: oklch(0.64 0.195 253 / 45%);
+}
+
+/* ============================================================================
+   THÈME 2 : macOS SONOMA FROSTED GLASS (Apple Focus / Control Center)
+   Profondeur matérielle discrète, verre dépoli sur les barres, accent Teal/Sky
+   ============================================================================ */
+:root[data-theme-preset="sonoma"] {
+  color-scheme: light;
+  --background: oklch(0.962 0.007 240); /* #F2F4F8 Cool Frost */
+  --foreground: oklch(0.19 0.018 245);
+
+  --card: oklch(0.995 0.002 240);
+  --card-foreground: oklch(0.19 0.018 245);
+
+  --popover: oklch(0.995 0.002 240);
+  --popover-foreground: oklch(0.19 0.018 245);
+
+  /* Sonoma Focus Teal (#0D9488) */
+  --primary: oklch(0.56 0.13 185);
+  --primary-foreground: oklch(0.99 0 0);
+
+  --secondary: oklch(0.935 0.01 235);
+  --secondary-foreground: oklch(0.26 0.025 235);
+
+  --muted: oklch(0.94 0.008 235);
+  --muted-foreground: oklch(0.49 0.018 240);
+
+  --accent: oklch(0.92 0.025 188);
+  --accent-foreground: oklch(0.35 0.1 185);
+
+  --destructive: oklch(0.59 0.22 24);
+  --destructive-foreground: oklch(0.99 0 0);
+
+  --border: oklch(0.88 0.01 240);
+  --input: oklch(0.88 0.01 240);
+  --ring: oklch(0.56 0.13 185 / 45%);
+
+  --finance: oklch(0.6 0.16 155);
+  --finance-foreground: oklch(0.99 0 0);
+  --project: oklch(0.56 0.17 245);
+  --project-foreground: oklch(0.99 0 0);
+  --idea: oklch(0.73 0.16 74);
+  --idea-foreground: oklch(0.22 0.04 74);
+
+  --chart-1: oklch(0.56 0.13 185);
+  --chart-2: oklch(0.6 0.16 155);
+  --chart-3: oklch(0.73 0.16 74);
+  --chart-4: oklch(0.56 0.17 245);
+  --chart-5: oklch(0.64 0.15 215);
+
+  --radius: 0.9375rem;
+  --glass-bg: rgba(242, 244, 248, 0.76);
+  --glass-border: rgba(15, 23, 42, 0.09);
+  --surface-shadow: 0 2px 6px rgba(15, 23, 42, 0.04), 0 10px 24px rgba(15, 23, 42, 0.04);
+
+  --sidebar: oklch(0.955 0.008 240);
+  --sidebar-foreground: oklch(0.19 0.018 245);
+  --sidebar-primary: oklch(0.56 0.13 185);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.92 0.025 188);
+  --sidebar-accent-foreground: oklch(0.35 0.1 185);
+  --sidebar-border: oklch(0.88 0.01 240);
+  --sidebar-ring: oklch(0.56 0.13 185 / 45%);
+}
+
+.dark[data-theme-preset="sonoma"] {
+  color-scheme: dark;
+  --background: oklch(0.19 0.003 260);  /* #141416 macOS Graphite Charcoal */
+  --foreground: oklch(0.96 0.003 260);
+
+  --card: oklch(0.235 0.004 260);       /* #1E1E21 Elevated Charcoal */
+  --card-foreground: oklch(0.96 0.003 260);
+
+  --popover: oklch(0.28 0.005 260);     /* #27272B */
+  --popover-foreground: oklch(0.96 0.003 260);
+
+  /* Calm Apple Mint/Teal (#14B8A6) */
+  --primary: oklch(0.71 0.13 178);
+  --primary-foreground: oklch(0.14 0.02 178);
+
+  --secondary: oklch(0.28 0.005 260);
+  --secondary-foreground: oklch(0.93 0.003 260);
+
+  --muted: oklch(0.26 0.004 260);
+  --muted-foreground: oklch(0.67 0.006 260);
+
+  --accent: oklch(0.3 0.02 178);
+  --accent-foreground: oklch(0.94 0.01 178);
+
+  --destructive: oklch(0.65 0.21 25);
+  --destructive-foreground: oklch(0.99 0 0);
+
+  --border: oklch(1 0 0 / 11%);
+  --input: oklch(1 0 0 / 14%);
+  --ring: oklch(0.71 0.13 178 / 45%);
+
+  --finance: oklch(0.71 0.16 155);
+  --finance-foreground: oklch(0.12 0.02 155);
+  --project: oklch(0.68 0.14 245);
+  --project-foreground: oklch(0.99 0 0);
+  --idea: oklch(0.78 0.15 74);
+  --idea-foreground: oklch(0.15 0.03 74);
+
+  --chart-1: oklch(0.71 0.13 178);
+  --chart-2: oklch(0.71 0.16 155);
+  --chart-3: oklch(0.78 0.15 74);
+  --chart-4: oklch(0.68 0.14 245);
+  --chart-5: oklch(0.72 0.12 205);
+
+  --glass-bg: rgba(30, 30, 33, 0.78);
+  --glass-border: rgba(255, 255, 255, 0.11);
+  --surface-shadow: 0 2px 6px rgba(0, 0, 0, 0.4), 0 10px 28px rgba(0, 0, 0, 0.3);
+
+  --sidebar: oklch(0.205 0.004 260);
+  --sidebar-foreground: oklch(0.96 0.003 260);
+  --sidebar-primary: oklch(0.71 0.13 178);
+  --sidebar-primary-foreground: oklch(0.14 0.02 178);
+  --sidebar-accent: oklch(0.28 0.005 260);
+  --sidebar-accent-foreground: oklch(0.93 0.003 260);
+  --sidebar-border: oklch(1 0 0 / 11%);
+  --sidebar-ring: oklch(0.71 0.13 178 / 45%);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    @apply font-sans scroll-smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    touch-action: manipulation;
+    overscroll-behavior-y: none;
+  }
+
+  /* Empêche le zoom automatique iOS/Android au focus d'un champ (< 16px) */
+  @media (max-width: 767px), (pointer: coarse) {
+    input,
+    textarea,
+    select {
+      font-size: 16px !important;
+    }
+  }
+
+  body {
+    @apply bg-background text-foreground selection:bg-primary/20 selection:text-primary min-h-screen;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    transition-property: background-color, color;
+    transition-duration: 200ms;
+    transition-timing-function: ease-out;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-heading);
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+}
+
+/* Ergonomie Apple : chiffres tabulaires pour montants, compteurs et dates */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Barres de navigation et modales en verre dépoli Apple */
+.apple-glass-bar {
+  background: var(--glass-bg);
+  border-color: var(--glass-border);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+/* Surfaces élevées avec ombre douce multicouche */
+.apple-surface {
+  box-shadow: var(--surface-shadow);
+}
+
+/* Micro-interaction tactile interruptible (jamais transition: all) */
+.apple-press {
+  transition-property: transform, background-color, border-color, box-shadow, opacity;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
+}
+
+.apple-press:active {
+  transform: scale(0.96);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .apple-press {
+    transition-duration: 0ms;
+  }
+  .apple-press:active {
+    transform: none;
+  }
+}
