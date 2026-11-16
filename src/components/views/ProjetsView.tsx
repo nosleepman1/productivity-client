@@ -1,13 +1,16 @@
 import { useMemo, useState } from "react";
-import { CheckSquare, FolderKanban, Plus, Sparkles } from "lucide-react";
+import { CheckSquare, Flame, FolderKanban, Lightbulb, Plus } from "lucide-react";
 import { AnimatePresence, motion, MotionConfig } from "motion/react";
+import { useTranslation } from "react-i18next";
+import { IdeesView } from "@/components/views/IdeesView";
+import { HabitudesSection } from "@/features/productivity/components/HabitudesSection";
+import { cn } from "@/lib/utils";
 import { useActiveEspace } from "@/features/espaces/hooks/useEspaces";
 import { DeleteConfirmDialog } from "@/features/finances/components/DeleteConfirmDialog";
 import {
   ProductivityFiltersBar,
   type ProductivityStatusFilter,
 } from "@/features/productivity/components/ProductivityFiltersBar";
-import { ProductivityKpiGrid } from "@/features/productivity/components/ProductivityKpiGrid";
 import { ProductivityKpiSkeleton } from "@/features/productivity/components/ProductivitySkeletons";
 import { ProjetFormModal } from "@/features/productivity/components/ProjetFormModal";
 import { ProjetList } from "@/features/productivity/components/ProjetList";
@@ -35,21 +38,33 @@ import type {
   Tache,
 } from "@/types/productivity";
 
-type ProductivityTab = "projets" | "taches";
+/**
+ * Sous-onglets de l'univers Projets pilotés par la barre de navigation inférieure.
+ */
+export type ProjetsSubTab = "projets" | "taches" | "habitudes" | "notes";
+
+/**
+ * Propriétés de la vue Projets, Tâches & Notes.
+ */
+export interface ProjetsViewProps {
+  /** Sous-onglet actif contrôlé par `BottomNav`. */
+  activeSubTab?: ProjetsSubTab;
+}
 
 type DeleteTarget =
   | { kind: "projet"; item: Projet }
   | { kind: "tache"; item: Tache };
 
 /**
- * Vue principale Projets & Tâches connectée à l'API NestJS,
+ * Vue principale Projets, Tâches & Notes connectée à l'API NestJS,
  * isolée par `espaceId` actif et animée avec `motion/react`.
  */
-export function ProjetsView() {
+export function ProjetsView({ activeSubTab = "projets" }: ProjetsViewProps = {}) {
+  const { t } = useTranslation();
   const { activeEspace, activeEspaceId, isLoading: isLoadingEspace } =
     useActiveEspace();
 
-  const [activeTab, setActiveTab] = useState<ProductivityTab>("projets");
+  const activeTab = activeSubTab;
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] =
@@ -180,92 +195,152 @@ export function ProjetsView() {
   const activeMeta =
     activeTab === "projets" ? projetsQuery.data?.meta : tachesQuery.data?.meta;
 
+  const sectionMeta = {
+    projets: {
+      title: "Projets",
+      subtitle: "Jalons, livrables et suivi d'avancement",
+      Icon: FolderKanban,
+      iconClass:
+        "bg-indigo-500/12 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-300",
+      ctaClass: "bg-indigo-600 hover:bg-indigo-500 shadow-indigo-500/25",
+    },
+    taches: {
+      title: "Tâches",
+      subtitle: "Actions prioritaires (en solo ou liées à un projet)",
+      Icon: CheckSquare,
+      iconClass:
+        "bg-sky-500/12 text-sky-600 dark:bg-sky-500/20 dark:text-sky-300",
+      ctaClass: "bg-sky-600 hover:bg-sky-500 shadow-sky-500/25",
+    },
+    habitudes: {
+      title: "Habitudes",
+      subtitle: "Discipline quotidienne et séries actives",
+      Icon: Flame,
+      iconClass:
+        "bg-orange-500/12 text-orange-600 dark:bg-orange-500/20 dark:text-orange-300",
+      ctaClass: "bg-orange-600 hover:bg-orange-500 shadow-orange-500/25",
+    },
+    notes: {
+      title: "Notes & Idées",
+      subtitle: "Capture rapide, idées et comptes-rendus",
+      Icon: Lightbulb,
+      iconClass:
+        "bg-amber-500/12 text-amber-600 dark:bg-amber-500/20 dark:text-amber-300",
+      ctaClass: "bg-amber-600 hover:bg-amber-500 shadow-amber-500/25",
+    },
+  }[activeTab];
+
+  const ActiveIcon = sectionMeta.Icon;
+
   return (
     <MotionConfig reducedMotion="user">
-      <div className="space-y-6 pb-24">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-[var(--accent)]/10 px-2.5 py-0.5 text-xs font-semibold text-[var(--accent)]">
-              <Sparkles className="h-3 w-3" />
-              {activeEspace?.nom ?? "Espace actif"}
+      <div className="space-y-5 pb-10">
+        {activeTab !== "notes" && activeTab !== "habitudes" && (
+          <div className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-xs sm:p-5">
+            <div className="flex flex-col gap-3.5 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex min-w-0 items-center gap-3.5">
+                <div
+                  className={cn(
+                    "flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl",
+                    sectionMeta.iconClass,
+                  )}
+                >
+                  <ActiveIcon className="h-6 w-6" />
+                </div>
+                <div className="min-w-0">
+                  <div className="inline-flex items-center gap-1.5 rounded-full bg-[var(--muted)] px-2.5 py-0.5 text-[11px] font-semibold text-[var(--muted-foreground)]">
+                    <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
+                    <span className="truncate">
+                      {activeEspace?.nom ?? t("common.activeSpace")}
+                    </span>
+                  </div>
+                  <h1 className="mt-1 truncate text-xl font-bold tracking-tight text-[var(--foreground)] sm:text-2xl">
+                    {t(`projets.sections.${activeTab}.title`)}
+                  </h1>
+                  <p className="truncate text-xs text-[var(--muted-foreground)]">
+                    {t(`projets.sections.${activeTab}.subtitle`)}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                disabled={!activeEspaceId}
+                onClick={() =>
+                  activeTab === "projets"
+                    ? setProjetModal({ open: true, item: null })
+                    : setTacheModal({ open: true, item: null })
+                }
+                className={cn(
+                  "apple-press inline-flex min-h-[44px] items-center justify-center gap-2 rounded-2xl px-4 text-sm font-semibold text-white shadow-md transition-all disabled:opacity-50",
+                  sectionMeta.ctaClass,
+                )}
+              >
+                <Plus className="h-4 w-4" />
+                {activeTab === "projets"
+                  ? t("projets.newProject")
+                  : t("projets.newTask")}
+              </button>
             </div>
-            <h1 className="mt-1.5 text-2xl font-bold tracking-tight text-[var(--text-primary)]">
-              Projets & Tâches
-            </h1>
           </div>
-
-          <button
-            type="button"
-            disabled={!activeEspaceId}
-            onClick={() =>
-              activeTab === "projets"
-                ? setProjetModal({ open: true, item: null })
-                : setTacheModal({ open: true, item: null })
-            }
-            className="apple-press inline-flex min-h-[44px] items-center justify-center gap-2 rounded-2xl bg-[var(--accent)] px-4 text-sm font-semibold text-white shadow-sm disabled:opacity-50"
-          >
-            <Plus className="h-4 w-4" />
-            {activeTab === "projets" ? "Nouveau projet" : "Nouvelle tâche"}
-          </button>
-        </div>
-
-        {isLoadingEspace || projetsQuery.isLoading || tachesQuery.isLoading ? (
-          <ProductivityKpiSkeleton />
-        ) : (
-          <>
-            <ProductivityKpiGrid {...kpis} />
-            <TacheProgressRing
-              completed={kpis.tachesTerminees}
-              total={allTaches.length}
-            />
-          </>
         )}
 
-        {/* Onglets segmentés */}
-        <div
-          role="tablist"
-          aria-label="Vues productivité"
-          className="apple-surface grid grid-cols-2 gap-1 rounded-2xl p-1.5"
-        >
-          {(
-            [
-              { id: "projets", label: "Projets", icon: FolderKanban },
-              { id: "taches", label: "Tâches", icon: CheckSquare },
-            ] as const
-          ).map((tab) => {
-            const Icon = tab.icon;
-            const active = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                role="tab"
-                type="button"
-                aria-selected={active}
-                onClick={() => {
-                  setActiveTab(tab.id);
-                  setPage(1);
-                }}
-                className={`relative flex min-h-[42px] items-center justify-center gap-2 rounded-xl px-3 text-sm font-medium transition-colors ${
-                  active
-                    ? "text-[var(--text-primary)]"
-                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-                }`}
-              >
-                {active && (
-                  <motion.span
-                    layoutId="productivity-tab-pill"
-                    transition={{ type: "spring", stiffness: 420, damping: 34 }}
-                    className="absolute inset-0 rounded-xl bg-[var(--bg-elevated)] shadow-sm ring-1 ring-[var(--border-subtle)]"
-                  />
-                )}
-                <Icon className="relative z-10 h-4 w-4" />
-                <span className="relative z-10">{tab.label}</span>
-              </button>
-            );
-          })}
-        </div>
+        {activeTab === "notes" ? (
+          <IdeesView embedded />
+        ) : activeTab === "habitudes" ? (
+          <HabitudesSection espaceId={activeEspaceId} />
+        ) : (
+          <>
+            {isLoadingEspace ||
+            projetsQuery.isLoading ||
+            tachesQuery.isLoading ? (
+              <ProductivityKpiSkeleton />
+            ) : activeTab === "projets" ? (
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-xs">
+                  <span className="text-xs font-semibold text-[var(--muted-foreground)]">
+                    {t("projets.activeProjectsKpi")}
+                  </span>
+                  <p className="mt-2 text-2xl font-extrabold tabular-nums text-[var(--foreground)]">
+                    {kpis.projetsActifs}
+                  </p>
+                  <p className="mt-1 text-[11px] text-[var(--muted-foreground)] tabular-nums">
+                    {t("projets.ofTotalProjects", { count: allProjets.length })}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-xs">
+                  <span className="text-xs font-semibold text-[var(--muted-foreground)]">
+                    {t("projets.completedProjectsKpi")}
+                  </span>
+                  <p className="mt-2 text-2xl font-extrabold tabular-nums text-emerald-600 dark:text-emerald-400">
+                    {allProjets.length - kpis.projetsActifs}
+                  </p>
+                  <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-[var(--muted)]">
+                    <div
+                      className="h-full rounded-full bg-indigo-500 transition-all duration-500"
+                      style={{
+                        width: `${
+                          allProjets.length > 0
+                            ? Math.round(
+                                ((allProjets.length - kpis.projetsActifs) /
+                                  allProjets.length) *
+                                  100,
+                              )
+                            : 0
+                        }%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <TacheProgressRing
+                completed={kpis.tachesTerminees}
+                total={allTaches.length}
+              />
+            )}
 
-        <ProductivityFiltersBar
+            <ProductivityFiltersBar
           search={search}
           onSearchChange={setSearch}
           showStatusFilter
@@ -346,6 +421,8 @@ export function ProjetsView() {
             )}
           </motion.div>
         </AnimatePresence>
+          </>
+        )}
 
         <ProjetFormModal
           open={projetModal.open}
@@ -358,6 +435,7 @@ export function ProjetsView() {
         <TacheFormModal
           open={tacheModal.open}
           initialData={tacheModal.item}
+          projets={allProjets}
           isPending={createTache.isPending || updateTache.isPending}
           onClose={() => setTacheModal({ open: false, item: null })}
           onSubmit={(dto) => void handleTacheSubmit(dto)}
