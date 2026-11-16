@@ -1,6 +1,15 @@
-import { Calendar, CheckCircle2, Circle, Pencil, Trash2 } from "lucide-react";
+import {
+  Calendar,
+  CalendarPlus,
+  CheckCircle2,
+  CheckSquare,
+  Circle,
+  Pencil,
+  Trash2,
+} from "lucide-react";
 import { motion } from "motion/react";
 import { formatDateUtc } from "@/features/finances/utils/format";
+import { buildGoogleCalendarTemplateUrl } from "@/features/productivity/utils/calendar";
 import { getDeadlineBadge } from "@/features/productivity/utils/dates";
 import type { Projet } from "@/types/productivity";
 
@@ -116,17 +125,61 @@ export function ProjetCard({
         </div>
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center gap-4 border-t border-[var(--border-subtle)] pt-3 text-xs text-[var(--text-secondary)]">
-        <span className="inline-flex items-center gap-1.5">
-          <Calendar className="h-3.5 w-3.5" />
-          Début : {formatDateUtc(projet.dateDebut)}
-        </span>
-        {projet.dateFin && (
+      {projet.taches && projet.taches.length > 0 && (
+        <div className="mt-3 rounded-2xl bg-[var(--bg-subtle)] p-2.5">
+          <div className="flex items-center justify-between text-xs">
+            <span className="inline-flex items-center gap-1.5 font-medium text-[var(--text-secondary)]">
+              <CheckSquare className="h-3.5 w-3.5 text-indigo-500" />
+              Tâches rattachées
+            </span>
+            <span className="font-semibold tabular-nums text-[var(--text-primary)]">
+              {projet.taches.filter((t) => t.estTerminee).length} /{" "}
+              {projet.taches.length}
+            </span>
+          </div>
+          <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-black/10 dark:bg-white/10">
+            <div
+              className="h-full rounded-full bg-indigo-500 transition-all"
+              style={{
+                width: `${Math.round(
+                  (projet.taches.filter((t) => t.estTerminee).length /
+                    projet.taches.length) *
+                    100,
+                )}%`,
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-[var(--border-subtle)] pt-3 text-xs text-[var(--text-secondary)]">
+        <div className="flex flex-wrap items-center gap-4">
           <span className="inline-flex items-center gap-1.5">
             <Calendar className="h-3.5 w-3.5" />
-            Fin prévue : {formatDateUtc(projet.dateFin)}
+            Début : {formatDateUtc(projet.dateDebut)}
           </span>
-        )}
+          {projet.dateFin && (
+            <span className="inline-flex items-center gap-1.5">
+              <Calendar className="h-3.5 w-3.5" />
+              Fin prévue : {formatDateUtc(projet.dateFin)}
+            </span>
+          )}
+        </div>
+        <a
+          href={buildGoogleCalendarTemplateUrl({
+            title: `Projet : ${projet.titre}`,
+            description: projet.description,
+            startDate: projet.dateDebut,
+            endDate: projet.dateFin,
+          })}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 rounded-full bg-sky-500/10 px-2.5 py-1 text-[11px] font-semibold text-sky-600 hover:bg-sky-500/20 dark:text-sky-400"
+          title="Planifier ce projet dans Google Calendar"
+        >
+          <CalendarPlus className="h-3.5 w-3.5" />
+          Agenda
+        </a>
       </div>
     </motion.article>
   );
