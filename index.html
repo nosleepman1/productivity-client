@@ -25,9 +25,149 @@
     />
     <meta name="apple-mobile-web-app-title" content="Productivity" />
     <meta name="mobile-web-app-capable" content="yes" />
+
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background-color: #f5f5f7;
+        color: #0f172a;
+      }
+      @media (prefers-color-scheme: dark) {
+        html,
+        body {
+          background-color: #09090b;
+          color: #f8fafc;
+        }
+      }
+      .boot-shell {
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        padding: 24px;
+      }
+      .boot-title {
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+      .boot-sub {
+        font-size: 12px;
+        opacity: 0.65;
+      }
+      @keyframes bs-bob {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-2.5px); }
+      }
+      @keyframes bs-hand {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-1.8px); }
+      }
+      @keyframes bs-float {
+        0%, 100% { transform: translateY(0px); opacity: 0.9; }
+        50% { transform: translateY(-5px); opacity: 1; }
+      }
+      .bs-head { animation: bs-bob 2.2s ease-in-out infinite; }
+      .bs-hand-l { animation: bs-hand 0.55s ease-in-out infinite; }
+      .bs-hand-r { animation: bs-hand 0.55s ease-in-out 0.27s infinite; }
+      .bs-card-1 { animation: bs-float 2.6s ease-in-out infinite; }
+      .bs-card-2 { animation: bs-float 2.6s ease-in-out 0.9s infinite; }
+    </style>
+    <script>
+      try {
+        var t = localStorage.getItem("productivity-theme");
+        if (t === "dark" || (t !== "light" && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+          document.documentElement.style.backgroundColor = "#09090b";
+          document.documentElement.style.color = "#f8fafc";
+        }
+      } catch (e) {}
+
+      // Auto-réparation si un ancien Service Worker ou un chunk obsolète bloque le démarrage
+      (function () {
+        var retriedKey = "prod_sw_recover";
+        function recoverFromStaleCache() {
+          try {
+            if (sessionStorage.getItem(retriedKey)) return;
+            sessionStorage.setItem(retriedKey, "1");
+            if ("serviceWorker" in navigator) {
+              navigator.serviceWorker.getRegistrations().then(function (regs) {
+                return Promise.all(regs.map(function (r) { return r.unregister(); }));
+              }).finally(function () {
+                if ("caches" in window) {
+                  caches.keys().then(function (keys) {
+                    return Promise.all(keys.map(function (k) { return caches.delete(k); }));
+                  }).finally(function () { window.location.reload(); });
+                } else {
+                  window.location.reload();
+                }
+              });
+            } else {
+              window.location.reload();
+            }
+          } catch (e) {}
+        }
+
+        window.addEventListener("error", function (ev) {
+          var target = ev && ev.target;
+          if (target && (target.tagName === "SCRIPT" || target.tagName === "LINK")) {
+            recoverFromStaleCache();
+          }
+        }, true);
+
+        if ("serviceWorker" in navigator) {
+          navigator.serviceWorker.getRegistrations().then(function (regs) {
+            regs.forEach(function (r) { r.update().catch(function () {}); });
+          }).catch(function () {});
+        }
+      })();
+    </script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="boot-shell" aria-label="Chargement de l'application">
+        <svg width="144" height="120" viewBox="0 0 180 150" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <ellipse cx="90" cy="132" rx="64" ry="7" fill="rgba(99,102,241,0.14)" />
+          <g class="bs-card-1">
+            <rect x="16" y="30" width="34" height="24" rx="7" fill="rgba(99,102,241,0.08)" stroke="rgba(148,163,184,0.4)" stroke-width="1.5" />
+            <circle cx="26" cy="42" r="5" fill="rgba(16,185,129,0.22)" />
+            <path d="M23.5 42L25.2 43.8L28.5 40.2" stroke="#10b981" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+            <rect x="34" y="39" width="11" height="2.5" rx="1.25" fill="rgba(148,163,184,0.55)" />
+            <rect x="34" y="44" width="8" height="2.5" rx="1.25" fill="rgba(148,163,184,0.3)" />
+          </g>
+          <g class="bs-card-2">
+            <rect x="130" y="26" width="36" height="25" rx="7" fill="rgba(99,102,241,0.08)" stroke="rgba(148,163,184,0.4)" stroke-width="1.5" />
+            <path d="M137 44L143 38L148 41L158 33" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            <circle cx="158" cy="33" r="2.2" fill="#10b981" />
+          </g>
+          <path d="M58 112C58 92 71 80 90 80C109 80 122 92 122 112" fill="#4f46e5" />
+          <path d="M81 80L90 91L99 80" stroke="rgba(255,255,255,0.8)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          <g class="bs-head">
+            <rect x="85" y="68" width="10" height="14" rx="5" fill="#E8B998" />
+            <circle cx="90" cy="54" r="17" fill="#F2C6A5" />
+            <path d="M73 51C73 40 81 33 91 33C101 33 107 40 107 49C103 44 97 42 90 42C82 42 77 45 73 51Z" fill="#0f172a" />
+            <circle cx="84.5" cy="55" r="1.6" fill="#0f172a" />
+            <circle cx="95.5" cy="55" r="1.6" fill="#0f172a" />
+            <path d="M86.5 61.5C88.5 63.2 91.5 63.2 93.5 61.5" stroke="#1e293b" stroke-width="1.5" stroke-linecap="round" />
+          </g>
+          <rect x="28" y="112" width="124" height="7" rx="3.5" fill="rgba(148,163,184,0.5)" />
+          <rect x="42" y="119" width="5" height="13" rx="2.5" fill="rgba(148,163,184,0.35)" />
+          <rect x="133" y="119" width="5" height="13" rx="2.5" fill="rgba(148,163,184,0.35)" />
+          <path d="M66 86C66 83.8 67.8 82 70 82H110C112.2 82 114 83.8 114 86V112H66V86Z" fill="#1e293b" stroke="#475569" stroke-width="1.5" />
+          <rect x="72" y="89" width="36" height="16" rx="3" fill="rgba(129,140,248,0.28)" />
+          <rect x="85" y="95" width="10" height="4" rx="2" fill="rgba(255,255,255,0.65)" />
+          <circle cx="66" cy="110" r="4.5" fill="#F2C6A5" class="bs-hand-l" />
+          <circle cx="114" cy="110" r="4.5" fill="#F2C6A5" class="bs-hand-r" />
+        </svg>
+        <div class="boot-title">Productivity</div>
+        <div class="boot-sub">Préparation de votre espace...</div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
