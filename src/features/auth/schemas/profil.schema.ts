@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const PROFIL_LANGUES = ["fr", "en", "wo"] as const;
+export const PROFIL_LANGUES = ["fr", "en", "ar", "wo"] as const;
 export const PROFIL_THEMES = ["clair", "sombre", "systeme"] as const;
 
 export const updateProfilSchema = z.object({
