@@ -9,36 +9,43 @@ const UUID_V4_REGEX =
  * Schéma Zod de validation pour la création ou l'édition d'une dette ou créance.
  * Conforme aux DTOs `CreateDetteDto` et `CreateCreanceDto` du backend NestJS.
  */
-export const suiviFormSchema = z.object({
-  montant: z
-    .number({ message: "Veuillez saisir un montant valide" })
-    .int("Le montant doit être un nombre entier en FCFA")
-    .positive("Le montant doit être supérieur à 0 FCFA")
-    .max(1_000_000_000_000, "Montant hors limite"),
-  description: z
-    .string()
-    .trim()
-    .min(1, "La description est requise")
-    .max(255, "La description ne peut pas dépasser 255 caractères"),
-  date: z
-    .string()
-    .trim()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Format de date invalide (AAAA-MM-JJ)")
-    .optional()
-    .or(z.literal("")),
-  datePromise: z
-    .string()
-    .trim()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Format de date promise invalide (AAAA-MM-JJ)")
-    .optional()
-    .or(z.literal("")),
-  contactId: z
-    .string()
-    .trim()
-    .regex(UUID_V4_REGEX, "Identifiant de contact invalide")
-    .optional()
-    .or(z.literal("")),
-});
+export const suiviFormSchema = z
+  .object({
+    montant: z
+      .number({ message: "Veuillez saisir un montant valide" })
+      .int("Le montant doit être un nombre entier en FCFA")
+      .positive("Le montant doit être supérieur à 0 FCFA")
+      .max(1_000_000_000_000, "Montant hors limite"),
+    description: z
+      .string()
+      .trim()
+      .min(1, "La description est requise")
+      .max(255, "La description ne peut pas dépasser 255 caractères"),
+    date: z
+      .string()
+      .trim()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "La date d'origine est requise (AAAA-MM-JJ)"),
+    datePromise: z
+      .string()
+      .trim()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "Format de date promise invalide (AAAA-MM-JJ)")
+      .optional()
+      .or(z.literal("")),
+    contactId: z
+      .string()
+      .trim()
+      .regex(UUID_V4_REGEX, "Identifiant de contact invalide")
+      .optional()
+      .or(z.literal("")),
+  })
+  .refine(
+    (data) => !data.datePromise || data.datePromise >= data.date,
+    {
+      message:
+        "La date d'échéance promise ne peut pas être antérieure à la date d'origine",
+      path: ["datePromise"],
+    },
+  );
 
 /** Type inféré du formulaire de dette ou créance. */
 export type SuiviFormValues = z.infer<typeof suiviFormSchema>;
