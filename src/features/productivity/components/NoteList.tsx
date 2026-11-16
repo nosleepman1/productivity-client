@@ -1,5 +1,6 @@
 import { Plus, StickyNote } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
+import { useTranslation } from "react-i18next";
 import type { Note } from "@/types/productivity";
 import { NoteCard } from "./NoteCard";
 import { ProductivityListSkeleton } from "./ProductivitySkeletons";
@@ -31,6 +32,7 @@ export function NoteList({
   onEdit,
   onDelete,
 }: NoteListProps) {
+  const { t } = useTranslation();
   if (isLoading) {
     return <ProductivityListSkeleton count={4} />;
   }
@@ -46,11 +48,10 @@ export function NoteList({
           <StickyNote className="h-6 w-6" />
         </div>
         <h3 className="mt-4 text-base font-semibold text-[var(--text-primary)]">
-          Aucune note enregistrée
+          {t("projetsExtra.empty.noNoteTitle")}
         </h3>
         <p className="mt-1 max-w-sm text-sm text-[var(--text-secondary)]">
-          Capturez vos idées, comptes-rendus et réflexions dans cet espace en un
-          instant.
+          {t("projetsExtra.empty.noNoteDesc")}
         </p>
         <button
           type="button"
@@ -58,7 +59,7 @@ export function NoteList({
           className="apple-press mt-5 inline-flex min-h-[44px] items-center gap-2 rounded-xl bg-[var(--accent)] px-4 text-sm font-semibold text-white shadow-sm"
         >
           <Plus className="h-4 w-4" />
-          Nouvelle note
+          {t("idees.newNote")}
         </button>
       </motion.div>
     );
