@@ -53,7 +53,8 @@ export function PwaUpdatePrompt() {
     <div
       role="status"
       aria-live="polite"
-      className="fixed inset-x-0 top-3 z-[70] mx-auto w-[calc(100%-1.5rem)] max-w-md px-1"
+      style={{ top: "calc(env(safe-area-inset-top, 0px) + 0.75rem)" }}
+      className="fixed inset-x-0 z-[70] mx-auto w-[calc(100%-1.5rem)] max-w-md px-1"
     >
       <div className="apple-glass flex items-center justify-between gap-3 rounded-2xl border border-indigo-500/30 bg-card/95 px-3.5 py-2.5 shadow-lg backdrop-blur-xl">
         <div className="flex min-w-0 items-center gap-2.5">
