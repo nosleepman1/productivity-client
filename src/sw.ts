@@ -63,12 +63,12 @@ self.addEventListener("push", (event) => {
     payload = { body: event.data.text() };
   }
 
-  const title = payload.title || "Productivity";
+  const title = payload.title || "Ndimbeul";
   const options: NotificationOptions = {
     body: payload.body || "Nouvelle notification",
     icon: "/pwa-192x192.png",
     badge: "/pwa-192x192.png",
-    tag: payload.tag || "productivity-notif",
+    tag: payload.tag || "ndimbeul-notif",
     data: { url: payload.url || "/" },
   };
 
