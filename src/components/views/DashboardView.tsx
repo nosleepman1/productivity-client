@@ -5,6 +5,7 @@ import {
   ArrowDownLeft,
   ArrowRight,
   ArrowUpRight,
+  BellRing,
   CalendarClock,
   Check,
   CheckSquare,
@@ -31,6 +32,7 @@ import {
   type DailyQuote,
 } from "@/features/subscriptions/api/subscriptions.api";
 import { useTodayQuote } from "@/features/subscriptions/hooks/useSubscriptions";
+import { usePushNotifications } from "@/features/notifications/hooks/usePushNotifications";
 import {
   useHabitudes,
   useToggleHabitudeMutation,
@@ -180,10 +182,43 @@ export function DashboardView({
   const dettesRetard = dettesResume.data?.nombreEnRetard ?? 0;
 
   const greetingName = user?.name?.trim().split(/\s+/)[0] || "vous";
+  const push = usePushNotifications();
+  const showPushPrompt =
+    push.isSupported &&
+    push.isSecureContext &&
+    push.serverConfigured &&
+    !push.isSubscribed &&
+    push.permission !== "denied";
 
   return (
     <MotionConfig reducedMotion="user">
       <div className="space-y-5 pb-28">
+        {showPushPrompt && (
+          <div className="apple-surface flex items-center justify-between gap-3 rounded-2xl border border-indigo-500/25 bg-indigo-500/8 px-4 py-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400">
+                <BellRing className="h-4 w-4" />
+              </div>
+              <div className="min-w-0">
+                <p className="truncate text-xs font-semibold text-foreground">
+                  Activer les notifications
+                </p>
+                <p className="truncate text-[11px] text-muted-foreground">
+                  Recevez vos rappels, citations et alertes en temps réel.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              disabled={push.isPending}
+              onClick={push.enable}
+              className="apple-press shrink-0 rounded-xl bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-500 disabled:opacity-50"
+            >
+              {push.isPending ? "Activation..." : "Autoriser"}
+            </button>
+          </div>
+        )}
+
         {/* 1. Hero Bento Card — Trésorerie & Action rapide */}
         <motion.section
           initial={{ opacity: 0, y: 12 }}
